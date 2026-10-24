@@ -59,6 +59,50 @@ const products: Product[] = [
   },
 ]
 
+type Glaze = {
+  id: string
+  name: string
+  finish: string
+  color: string
+  texture: string
+  swatch: string
+}
+
+const glazes: Glaze[] = [
+  {
+    id: 'morning-sky',
+    name: 'Morning Sky',
+    finish: 'Satin glaze with a lavender-blue drift',
+    color: 'url(#glazeSkyGradient)',
+    texture: 'url(#glazeMorningTexture)',
+    swatch: 'linear-gradient(145deg, #b4ced5 0%, #9ab8c7 48%, #c9b8d0 100%)',
+  },
+  {
+    id: 'moss-cream',
+    name: 'Moss & Cream',
+    finish: 'Sage green dip over raw stoneware',
+    color: 'url(#glazeMossGradient)',
+    texture: 'url(#glazeMossTexture)',
+    swatch: 'linear-gradient(180deg, #77937b 0%, #9cae8d 58%, #d7c2a4 59%, #d7c2a4 100%)',
+  },
+  {
+    id: 'sandstone',
+    name: 'Sandstone',
+    finish: 'Warm satin cream with iron specks',
+    color: 'url(#glazeSandGradient)',
+    texture: 'url(#glazeSandTexture)',
+    swatch: 'radial-gradient(#927960 1px, transparent 1.3px) 2px 3px / 10px 10px, linear-gradient(145deg, #e1c9a9, #c9ad89)',
+  },
+  {
+    id: 'deep-pine',
+    name: 'Deep Pine',
+    finish: 'Glossy forest glaze with a soft sheen',
+    color: 'url(#glazePineGradient)',
+    texture: 'url(#glazePineTexture)',
+    swatch: 'linear-gradient(145deg, #42695b 0%, #244c42 62%, #173a35 100%)',
+  },
+]
+
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Playfair+Display:wght@400;500;600&display=swap');
 
@@ -97,6 +141,17 @@ const styles = `
   .header-inner { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 28px; }
   .wordmark { display: inline-flex; align-items: center; gap: 10px; color: #293e48; font-family: 'Playfair Display', Georgia, serif; font-size: 23px; letter-spacing: -.6px; white-space: nowrap; }
   .wordmark-icon { color: #c45e69; }
+  @keyframes liquid-logo-twirl {
+    0% { transform: rotate(0) scale(1, 1); }
+    22% { transform: rotate(-42deg) scale(1.17, .84); }
+    56% { transform: rotate(205deg) scale(.86, 1.14); }
+    78% { transform: rotate(318deg) scale(1.08, .94); }
+    100% { transform: rotate(360deg) scale(1, 1); }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .wordmark-icon { transform-origin: center; }
+    .wordmark:hover .wordmark-icon, .wordmark:focus-visible .wordmark-icon, .wordmark.logo-twirling .wordmark-icon { animation: liquid-logo-twirl 1s cubic-bezier(.2,.8,.25,1) both; }
+  }
   .nav-links { position: absolute; left: 50%; display: flex; align-items: center; gap: 2px; padding: 5px; border: 1px solid #e8dfd2; border-radius: 999px; background: #f4efe7; box-shadow: inset 0 1px 2px rgba(70,57,43,.05), 0 2px 8px rgba(70,57,43,.04); color: #40565e; font-size: 12px; transform: translateX(-50%); }
   .nav-links a { padding: 9px 19px; border-radius: 999px; transition: color .25s ease, background-color .25s ease, box-shadow .25s ease; white-space: nowrap; }
   .nav-links a:hover { background: #fffdf9; color: #a83f59; box-shadow: 0 2px 8px rgba(70,57,43,.09); }
@@ -133,6 +188,41 @@ const styles = `
   .hero-stamp { position: absolute; left: 0; top: 24px; width: 86px; height: 86px; display: grid; place-items: center; border: 1px solid rgba(255,255,255,.95); border-radius: 50%; background: #f8d7cb; color: #75434d; text-align: center; font-family: 'Playfair Display', Georgia, serif; font-size: 13px; line-height: 1.35; transform: rotate(-10deg); }
   .section { padding: 100px 0; }
   #home, #collection, #artist, #contact { scroll-margin-top: 108px; }
+  .glaze-studio { position: relative; overflow: hidden; padding: 78px 0 86px; background: radial-gradient(ellipse at 14% 12%, rgba(255,255,255,.8), transparent 35%), radial-gradient(ellipse at 86% 82%, rgba(195,173,201,.16), transparent 33%), #f4ede2; }
+  .glaze-studio::before { position: absolute; inset: 0; background-image: radial-gradient(rgba(117,76,53,.1) .65px, transparent .85px); background-size: 23px 23px; content: ''; opacity: .3; pointer-events: none; }
+  .glaze-studio .shell { position: relative; }
+  .glaze-heading { max-width: 680px; margin: 0 auto 35px; text-align: center; }
+  .glaze-heading .eyebrow { margin-bottom: 12px; color: #a65d54; }
+  .glaze-heading h2 { margin: 0 0 11px; font-size: clamp(38px, 5vw, 54px); line-height: 1.1; letter-spacing: -.04em; }
+  .glaze-heading > p:last-child { margin: 0 auto; color: #526367; font-size: 14px; line-height: 1.8; }
+  .glaze-experience { max-width: 940px; margin: 0 auto; padding: clamp(20px, 4vw, 40px); border: 1px solid rgba(139,111,83,.2); border-radius: 34px 13px 31px 14px / 20px 33px 15px 31px; background: rgba(255,253,249,.74); box-shadow: 0 20px 55px rgba(79,65,48,.09), inset 0 1px rgba(255,255,255,.85); }
+  .glaze-stage { position: relative; min-height: 310px; display: grid; place-items: center; overflow: hidden; border-radius: 27px 11px 24px 12px / 15px 26px 12px 23px; background: radial-gradient(ellipse at 50% 57%, rgba(225,210,188,.54), transparent 55%), linear-gradient(145deg, #f9f5ec, #eee5d8); }
+  .glaze-stage::before, .glaze-stage::after { position: absolute; width: 210px; height: 210px; border-radius: 50%; background: rgba(202,184,207,.13); content: ''; filter: blur(1px); }
+  .glaze-stage::before { top: -140px; right: 8%; }
+  .glaze-stage::after { bottom: -160px; left: 8%; width: 260px; height: 260px; background: rgba(158,184,167,.16); }
+  .glaze-mug { position: relative; z-index: 1; width: min(100%, 350px); height: auto; max-height: 330px; overflow: visible; filter: drop-shadow(0 18px 12px rgba(73,58,44,.16)); }
+  .glaze-body { fill: url(#rawStoneware); }
+  .glaze-wave { transform-box: fill-box; transform-origin: center; animation: glaze-pour-in .82s cubic-bezier(.4,0,.2,1) both; }
+  @keyframes glaze-pour-in { from { transform: translateY(-250px); } to { transform: translateY(0); } }
+  .glaze-handle { fill: none; stroke: #c7a989; stroke-width: 19; }
+  .glaze-handle-inset { fill: none; stroke: #eee0c9; stroke-width: 5; }
+  .glaze-rim { fill: #dac2a4; stroke: #a88968; stroke-width: 2; }
+  .glaze-rim-inner { fill: #f2e5d1; }
+  .glaze-highlight { fill: none; stroke: rgba(255,255,255,.48); stroke-linecap: round; stroke-width: 4; }
+  .glaze-foot { fill: none; stroke: #a98765; stroke-linecap: round; stroke-width: 8; }
+  .glaze-selection { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 12px; padding: 25px 10px 20px; }
+  .glaze-swatch { width: 53px; height: 53px; padding: 4px; border: 1px solid rgba(100,82,64,.22); border-radius: 50%; background: rgba(255,255,255,.55); cursor: pointer; transition: transform .3s ease, border-color .3s ease, box-shadow .3s ease; }
+  .glaze-swatch::before { display: block; width: 100%; height: 100%; border-radius: 50%; background: var(--swatch); content: ''; }
+  .glaze-swatch:hover { transform: translateY(-3px) scale(1.04); }
+  .glaze-swatch[aria-pressed="true"] { border-color: #9d5e52; box-shadow: 0 0 0 3px #f4ede2, 0 0 0 4px #9d5e52, 0 8px 18px rgba(68,54,44,.17); transform: translateY(-2px); }
+  .glaze-swatch:focus-visible { outline: 3px solid #9d5e52; outline-offset: 5px; }
+  .glaze-caption { min-height: 87px; padding-top: 4px; text-align: center; }
+  .glaze-caption h3 { margin: 0 0 4px; color: #34484e; font-family: 'Playfair Display', Georgia, serif; font-size: 22px; font-weight: 400; }
+  .glaze-caption p { margin: 0 0 10px; color: #6c716c; font-size: 12px; }
+  .glaze-shop-link { display: inline-flex; align-items: center; gap: 5px; color: #805047 !important; font-size: 11px; font-weight: 600; letter-spacing: .02em; }
+  .glaze-shop-link svg { width: 13px; height: 13px; transition: transform .2s ease; }
+  .glaze-shop-link:hover svg { transform: translate(.125rem, -.125rem); }
+  .glaze-shop-link:focus-visible { outline: 2px solid #9d5e52; outline-offset: 4px; }
   .section#collection { padding: 72px 0; }
   .section#collection .section-heading { margin-bottom: 30px; }
   .section-heading { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin-bottom: 39px; }
@@ -311,6 +401,9 @@ const styles = `
     .product-grid.reveal-ready .product-card:nth-child(5) { --reveal-delay: 360ms; }
     .product-grid.reveal-ready .product-card:nth-child(6) { --reveal-delay: 450ms; }
   }
+  @media (prefers-reduced-motion: reduce) {
+    .glaze-wave { animation: none; }
+  }
   @media (max-width: 820px) {
     .shell { width: min(100% - 40px, 620px); }
     .site-header { height: auto; min-height: 72px; padding: 12px 0; }
@@ -327,6 +420,7 @@ const styles = `
     .artist-grid { gap: 46px; }
     .contact-grid { gap: 32px; }
     .contact-form { padding: 23px; gap: 14px; }
+    .glaze-stage { min-height: 280px; }
   }
   @media (max-width: 600px) {
     .shell { width: calc(100% - 36px); }
@@ -344,6 +438,14 @@ const styles = `
     .hero-stamp { left: 0; top: 13px; width: 73px; height: 73px; font-size: 11px; }
     .section { padding: 64px 0; }
     .section#collection { padding: 54px 0; }
+    .glaze-studio { padding: 58px 0 62px; }
+    .glaze-heading { margin-bottom: 25px; }
+    .glaze-heading > p:last-child { max-width: 330px; font-size: 13px; }
+    .glaze-experience { padding: 14px; }
+    .glaze-stage { min-height: 245px; }
+    .glaze-mug { width: min(100%, 300px); max-height: 260px; }
+    .glaze-selection { gap: 10px; padding: 21px 4px 18px; }
+    .glaze-swatch { width: 48px; height: 48px; }
     .section-heading { align-items: flex-start; flex-direction: column; gap: 10px; margin-bottom: 25px; }
     .section-heading p { font-size: 12px; }
     .product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 27px 13px; }
@@ -390,6 +492,144 @@ const styles = `
     *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
   }
 `
+
+function GlazeStudio() {
+  const [selectedGlaze, setSelectedGlaze] = useState(glazes[0])
+
+  return (
+    <section className="glaze-studio" aria-labelledby="glaze-studio-title">
+      <div className="shell">
+        <div className="glaze-heading">
+          <p className="eyebrow">INTERACTIVE STUDIO</p>
+          <h2 id="glaze-studio-title">Dip, Fire, Collect.</h2>
+          <p>
+            Select a studio glaze to see how raw Newtown stoneware transforms
+            under the flame.
+          </p>
+        </div>
+
+        <div className="glaze-experience">
+          <div className="glaze-stage">
+            <svg
+              className="glaze-mug"
+              viewBox="0 0 340 380"
+              role="img"
+              aria-labelledby="glaze-mug-title"
+            >
+              <title id="glaze-mug-title">{selectedGlaze.name} glaze on a wheel-thrown stoneware mug</title>
+              <defs>
+                <linearGradient id="glazeSkyGradient" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stopColor="#c6d8d9" />
+                  <stop offset="52%" stopColor="#90b5c2" />
+                  <stop offset="100%" stopColor="#b6a4c1" />
+                </linearGradient>
+                <linearGradient id="glazeMossGradient" x1="0" y1="0" x2="0.9" y2="1">
+                  <stop offset="0%" stopColor="#a4b99b" />
+                  <stop offset="54%" stopColor="#718f78" />
+                  <stop offset="100%" stopColor="#597863" />
+                </linearGradient>
+                <linearGradient id="glazeSandGradient" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stopColor="#ead6b9" />
+                  <stop offset="100%" stopColor="#c9ad89" />
+                </linearGradient>
+                <linearGradient id="glazePineGradient" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stopColor="#648574" />
+                  <stop offset="45%" stopColor="#315c4e" />
+                  <stop offset="100%" stopColor="#173c35" />
+                </linearGradient>
+                <pattern id="glazeMorningTexture" width="30" height="28" patternUnits="userSpaceOnUse">
+                  <circle cx="5" cy="6" r="1.1" fill="#f2eee8" opacity=".68" />
+                  <circle cx="21" cy="15" r=".9" fill="#778d9c" opacity=".5" />
+                  <circle cx="11" cy="24" r=".75" fill="#f2eee8" opacity=".6" />
+                </pattern>
+                <pattern id="glazeMossTexture" width="29" height="27" patternUnits="userSpaceOnUse">
+                  <circle cx="5" cy="6" r=".9" fill="#e6e2d2" opacity=".52" />
+                  <circle cx="20" cy="17" r=".8" fill="#455f4b" opacity=".4" />
+                </pattern>
+                <pattern id="glazeSandTexture" width="28" height="25" patternUnits="userSpaceOnUse">
+                  <circle cx="4" cy="5" r="1" fill="#856c54" opacity=".67" />
+                  <circle cx="19" cy="15" r=".8" fill="#92775c" opacity=".57" />
+                  <circle cx="8" cy="22" r=".7" fill="#f1e2cc" opacity=".78" />
+                </pattern>
+                <pattern id="glazePineTexture" width="31" height="29" patternUnits="userSpaceOnUse">
+                  <path d="M3 6h8" stroke="#c6d5c4" strokeWidth="1.2" strokeLinecap="round" opacity=".32" />
+                  <circle cx="22" cy="19" r=".85" fill="#a5bba8" opacity=".46" />
+                </pattern>
+                <pattern id="rawStoneware" width="22" height="22" patternUnits="userSpaceOnUse">
+                  <rect width="22" height="22" fill="#d9c1a3" />
+                  <circle cx="5" cy="6" r="1" fill="#9e8060" opacity=".56" />
+                  <circle cx="17" cy="15" r=".8" fill="#a98b69" opacity=".5" />
+                </pattern>
+                <clipPath id="stonewareMugBody">
+                  <path d="M83 91 Q170 108 257 91 C251 145 255 224 247 286 C244 316 231 329 211 334 Q170 343 129 334 C109 329 96 316 93 286 C85 224 89 145 83 91 Z" />
+                </clipPath>
+              </defs>
+
+              <path className="glaze-handle" d="M246 139 C322 118 326 246 242 230" />
+              <path className="glaze-handle-inset" d="M251 148 C302 138 305 222 250 220" />
+              <path
+                className="glaze-body"
+                fill="url(#rawStoneware)"
+                d="M83 91 Q170 108 257 91 C251 145 255 224 247 286 C244 316 231 329 211 334 Q170 343 129 334 C109 329 96 316 93 286 C85 224 89 145 83 91 Z"
+              />
+              <g clipPath="url(#stonewareMugBody)">
+                <path
+                  key={selectedGlaze.id}
+                  className="glaze-wave"
+                  fill={selectedGlaze.color}
+                  d={
+                    selectedGlaze.id === 'moss-cream'
+                      ? 'M66 103 C101 79 126 107 157 94 C187 81 216 82 270 102 L254 270 L76 270 Z'
+                      : 'M66 103 C101 79 126 107 157 94 C187 81 216 82 270 102 L254 350 L76 350 Z'
+                  }
+                />
+                <path
+                  key={`${selectedGlaze.id}-texture`}
+                  className="glaze-wave"
+                  fill={selectedGlaze.texture}
+                  d={
+                    selectedGlaze.id === 'moss-cream'
+                      ? 'M66 103 C101 79 126 107 157 94 C187 81 216 82 270 102 L254 270 L76 270 Z'
+                      : 'M66 103 C101 79 126 107 157 94 C187 81 216 82 270 102 L254 350 L76 350 Z'
+                  }
+                />
+              </g>
+              <path className="glaze-highlight" d="M101 123 C105 182 103 229 106 263" />
+              <path className="glaze-rim" d="M82 91 Q170 108 258 91 L255 105 Q170 121 84 105 Z" />
+              <path className="glaze-rim-inner" d="M100 96 Q170 107 241 96 Q170 115 100 96 Z" />
+              <path className="glaze-foot" d="M119 333 Q170 344 221 333" />
+              <path d="M124 345 Q170 354 216 345" fill="none" stroke="#ead9c2" strokeWidth="4" strokeLinecap="round" />
+            </svg>
+          </div>
+
+          <div className="glaze-selection" role="group" aria-label="Choose a studio glaze">
+            {glazes.map((glaze) => (
+              <button
+                key={glaze.id}
+                className="glaze-swatch"
+                type="button"
+                style={{ background: glaze.swatch }}
+                aria-label={`Select ${glaze.name} glaze`}
+                aria-pressed={selectedGlaze.id === glaze.id}
+                title={glaze.name}
+                onClick={() => setSelectedGlaze(glaze)}
+              />
+            ))}
+          </div>
+
+          <div className="glaze-caption" aria-live="polite" aria-atomic="true">
+            <h3>{selectedGlaze.name}</h3>
+            <p>{selectedGlaze.finish}</p>
+            <a className="glaze-shop-link" href={shopUrl} target="_blank" rel="noopener noreferrer">
+              Shop pieces in this glaze
+              <ArrowUpRight aria-hidden="true" />
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
 
 function StudioAdmin({
   inventory,
@@ -621,10 +861,32 @@ function StudioAdmin({
 function App() {
   const [formStatus, setFormStatus] = useState('')
   const [storyOpen, setStoryOpen] = useState(false)
+  const [logoTwirling, setLogoTwirling] = useState(false)
   const [catalog, setCatalog] = useState(products)
   const productGridRef = useRef<HTMLDivElement>(null)
   const storyTriggerRef = useRef<HTMLButtonElement>(null)
   const storyCloseRef = useRef<HTMLButtonElement>(null)
+  const logoTwirlTimeoutRef = useRef<number | undefined>(undefined)
+
+  useEffect(() => () => {
+    if (logoTwirlTimeoutRef.current !== undefined) {
+      window.clearTimeout(logoTwirlTimeoutRef.current)
+    }
+  }, [])
+
+  function handleWordmarkClick() {
+    setLogoTwirling(false)
+    window.requestAnimationFrame(() => {
+      setLogoTwirling(true)
+      if (logoTwirlTimeoutRef.current !== undefined) {
+        window.clearTimeout(logoTwirlTimeoutRef.current)
+      }
+      logoTwirlTimeoutRef.current = window.setTimeout(() => {
+        setLogoTwirling(false)
+        logoTwirlTimeoutRef.current = undefined
+      }, 1050)
+    })
+  }
 
   useEffect(() => {
     if (!storyOpen) return
@@ -748,7 +1010,12 @@ function App() {
 
       <header className="site-header">
         <div className="shell header-inner">
-          <a className="wordmark" href="#home" aria-label="SlippedCeramics home">
+          <a
+            className={`wordmark${logoTwirling ? ' logo-twirling' : ''}`}
+            href="#home"
+            aria-label="SlippedCeramics home"
+            onClick={handleWordmarkClick}
+          >
             <Palette className="wordmark-icon" size={22} strokeWidth={1.5} />
             <span>SlippedCeramics</span>
           </a>
@@ -800,6 +1067,8 @@ function App() {
             </div>
           </div>
         </section>
+
+        <GlazeStudio />
 
         <section className="section" id="collection">
           <div className="shell">
