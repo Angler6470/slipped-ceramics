@@ -49,7 +49,11 @@ type Product = {
   image: string
   alt: string
   description: string
+  subtitle: string
 }
+
+const defaultProductSubtitle = 'Small-batch stoneware, shaped slowly and meant to be lived with.'
+const catalogStorageKey = 'slipped-ceramics-product-catalog'
 
 const products: Product[] = [
   {
@@ -58,6 +62,7 @@ const products: Product[] = [
     image: '/products/blue-speckled-mug.webp',
     alt: 'Handmade blue-speckled stoneware mug held outdoors',
     description: 'A one-of-a-kind wheel-thrown stoneware mug finished in a soft blue-speckled glaze. Its comfortable handle and generous shape make it a lovely companion for everyday coffee or tea.',
+    subtitle: defaultProductSubtitle,
   },
   {
     name: 'Speckled Ceramic Catch-All',
@@ -65,6 +70,7 @@ const products: Product[] = [
     image: '/products/scalloped-catchall.webp',
     alt: 'Handmade speckled ceramic dish with a softly scalloped edge',
     description: 'A hand-shaped speckled stoneware catch-all with an easy, softly scalloped edge. Keep it by the sink for rings, on a desk for small treasures, or wherever a little handmade detail belongs.',
+    subtitle: defaultProductSubtitle,
   },
   {
     name: 'Speckled Ceramic Bowl',
@@ -72,6 +78,7 @@ const products: Product[] = [
     image: '/products/green-rim-bowl.webp',
     alt: 'Handmade speckled ceramic bowl with a mint-green rim',
     description: 'This small-batch stoneware bowl pairs a softly speckled clay body with a fresh green rim. Each one is shaped and glazed by hand, so the details are always its own.',
+    subtitle: defaultProductSubtitle,
   },
   {
     name: 'Carved Blueberry Tumbler',
@@ -79,6 +86,7 @@ const products: Product[] = [
     image: '/products/blueberry-tumbler.webp',
     alt: 'Wheel-thrown cream tumbler with carved lines and blueberry details',
     description: 'A wheel-thrown cream stoneware tumbler with hand-carved lines and tiny blueberry details. The tactile grooves and one-of-a-kind surface make it a cheerful piece for slow sips.',
+    subtitle: defaultProductSubtitle,
   },
   {
     name: 'Speckled Ombre Vase',
@@ -86,6 +94,7 @@ const products: Product[] = [
     image: '/products/speckled-vase.webp',
     alt: 'Round handmade vase with a soft pink and cream speckled glaze',
     description: 'A round, hand-thrown stoneware vase with a warm pink-and-cream glaze that settles into a soft, speckled finish. Lovely with a few garden stems or simply as a sculptural little accent.',
+    subtitle: defaultProductSubtitle,
   },
   {
     name: 'Blue Glazed Ceramic Cup Set',
@@ -93,8 +102,48 @@ const products: Product[] = [
     image: '/products/blue-cup-set.webp',
     alt: 'Three handmade cups with blue glaze arranged together',
     description: 'A set of three individually wheel-thrown cups in a softly varied blue glaze. Their subtle differences celebrate the small marks and variations that make handmade pottery special.',
+    subtitle: defaultProductSubtitle,
   },
 ]
+
+function isProduct(product: unknown): product is Product {
+  if (!product || typeof product !== 'object') return false
+  return (
+    'name' in product && typeof product.name === 'string' &&
+    'price' in product && typeof product.price === 'string' &&
+    'image' in product && typeof product.image === 'string' &&
+    'alt' in product && typeof product.alt === 'string' &&
+    'description' in product && typeof product.description === 'string' &&
+    'subtitle' in product && typeof product.subtitle === 'string'
+  )
+}
+
+function readCatalog(): Product[] {
+  const storedCatalog = window.localStorage.getItem(catalogStorageKey)
+  if (!storedCatalog) return products
+
+  const catalog: unknown = JSON.parse(storedCatalog)
+  if (!Array.isArray(catalog) || !catalog.every(isProduct)) {
+    throw new Error('Saved product listings have an unexpected format.')
+  }
+  return catalog
+}
+
+type CatalogState = {
+  catalog: Product[]
+  status: string
+}
+
+function getCatalogState(): CatalogState {
+  try {
+    return { catalog: readCatalog(), status: '' }
+  } catch (error) {
+    return {
+      catalog: products,
+      status: error instanceof Error ? error.message : 'Could not load saved product listings.',
+    }
+  }
+}
 
 type StudioUpdate = {
   id: string
@@ -523,8 +572,9 @@ const styles = `
   .admin-login-card > p:not(.admin-kicker) { margin: 0 0 24px; color: #56696f; font-size: 13px; line-height: 1.8; }
   .admin-login-form { display: grid; gap: 10px; }
   .admin-login-form label, .admin-product-form label { color: #344b52; font-size: 12px; font-weight: 600; }
-  .admin-login-form input, .admin-product-form input { width: 100%; min-height: 46px; padding: 11px 13px; border: 1px solid #d1bba2; border-radius: 14px 5px 15px 5px / 6px 14px 5px 13px; background: #fffdf9; color: #293e48; font: 14px 'DM Sans', sans-serif; }
-  .admin-login-form input:focus, .admin-product-form input:focus { border-color: #bc6655; outline: 3px solid rgba(188,102,85,.2); outline-offset: 2px; }
+  .admin-login-form input, .admin-product-form input, .admin-product-form textarea { width: 100%; min-height: 46px; padding: 11px 13px; border: 1px solid #d1bba2; border-radius: 14px 5px 15px 5px / 6px 14px 5px 13px; background: #fffdf9; color: #293e48; font: 14px 'DM Sans', sans-serif; }
+  .admin-product-form textarea { min-height: 100px; resize: vertical; }
+  .admin-login-form input:focus, .admin-product-form input:focus, .admin-product-form textarea:focus { border-color: #bc6655; outline: 3px solid rgba(188,102,85,.2); outline-offset: 2px; }
   .admin-primary { min-height: 46px; display: inline-flex; align-items: center; justify-content: center; gap: 9px; padding: 0 18px; border: 1px solid #a54d47; border-radius: 18px 6px 17px 6px / 6px 17px 6px 17px; background: #bd5c4e; color: white; cursor: pointer; font: 600 12px 'DM Sans', sans-serif; transition: background .25s, transform .25s, box-shadow .25s; }
   .admin-primary:hover { background: #a94d44; box-shadow: 0 7px 18px rgba(137,69,56,.2); transform: translateY(-1px); }
   .admin-primary svg { width: 16px; height: 16px; }
@@ -546,7 +596,7 @@ const styles = `
   .admin-product-row img { width: 66px; height: 66px; border-radius: 13px 5px 12px 6px; object-fit: cover; background: #eee3d4; }
   .admin-product-info { min-width: 0; }
   .admin-product-info strong { display: block; overflow: hidden; color: #33484e; font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
-  .admin-product-info span { color: #758083; font-size: 11px; }
+  .admin-product-info span { display: block; color: #758083; font-size: 11px; line-height: 1.45; }
   .admin-row-actions { display: flex; gap: 7px; }
   .admin-icon-button { width: 35px; height: 35px; display: grid; place-items: center; border: 1px solid #ead8c4; border-radius: 12px 5px 12px 5px; background: #fffdf9; color: #52666a; cursor: pointer; transition: background .2s, color .2s; }
   .admin-icon-button:hover { background: #ffe2c2; color: #8a4d41; }
@@ -998,13 +1048,30 @@ function ProductDetail({
   return (
     <div className="product-detail product-detail-enter">
       <style>{styles}</style>
-      <header className="product-detail-header">
-        <div className="shell">
+      <header className="site-header product-detail-header">
+        <div className="shell header-inner">
           <a className="wordmark" href="/#home" aria-label="SlippedCeramics home">
             <Palette className="wordmark-icon" size={22} strokeWidth={1.5} />
             <span>SlippedCeramics</span>
           </a>
-          <a className="product-detail-back" href="/#collection">Back to the collection</a>
+          <nav className="nav-links" aria-label="Main navigation">
+            <a href="/#collection">Shop Collection</a>
+            <a href="/#artist">Meet Kelly</a>
+            <a href="/#contact">Contact</a>
+          </nav>
+          <div className="header-social" aria-label="Social and shop links">
+            <a href="https://www.instagram.com/slippedceramics/" target="_blank" rel="noopener noreferrer">
+              Instagram <span className="header-social-arrow" aria-hidden="true">↗</span>
+            </a>
+            <span className="header-social-separator" aria-hidden="true">/</span>
+            <a href="https://www.tiktok.com/@slippedceramics" target="_blank" rel="noopener noreferrer">
+              TikTok <span className="header-social-arrow" aria-hidden="true">↗</span>
+            </a>
+            <span className="header-social-separator" aria-hidden="true">/</span>
+            <a href={shopUrl} target="_blank" rel="noopener noreferrer">
+              Etsy <span className="header-social-arrow" aria-hidden="true">↗</span>
+            </a>
+          </div>
         </div>
       </header>
       {product ? (
@@ -1025,7 +1092,7 @@ function ProductDetail({
                 </a>
                 <a className="product-detail-back" href="/#collection">Explore more pieces</a>
               </div>
-              <p className="product-detail-note">Small-batch stoneware, shaped slowly and meant to be lived with.</p>
+              <p className="product-detail-note">{product.subtitle}</p>
             </div>
           </div>
         </main>
@@ -1115,9 +1182,11 @@ function StudioUpdatesGallery({
 function StudioAdmin({
   inventory,
   onInventoryChange,
+  catalogStatus,
 }: {
   inventory: Product[]
-  onInventoryChange: (inventory: Product[]) => void
+  onInventoryChange: (inventory: Product[]) => boolean
+  catalogStatus: string
 }) {
   const [unlocked, setUnlocked] = useState(false)
   const [previewPassword, setPreviewPassword] = useState('')
@@ -1128,6 +1197,7 @@ function StudioAdmin({
     image: '',
     alt: '',
     description: '',
+    subtitle: '',
   })
   const [studioUpdatesState, setStudioUpdatesState] = useState(getStudioUpdatesState)
   const { updates, status: updateStatus } = studioUpdatesState
@@ -1153,20 +1223,25 @@ function StudioAdmin({
   }
 
   function resetDraft() {
-    setDraft({ name: '', price: '', image: '', alt: '', description: '' })
+    setDraft({ name: '', price: '', image: '', alt: '', description: '', subtitle: '' })
     setEditingIndex(null)
   }
 
   function handleProductSave(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (editingIndex === null) {
-      onInventoryChange([...inventory, draft])
-    } else {
-      onInventoryChange(
-        inventory.map((product, index) => index === editingIndex ? draft : product),
-      )
+    const normalizedDraft = {
+      ...draft,
+      name: draft.name.trim(),
+      description: draft.description.trim(),
+      subtitle: draft.subtitle.trim(),
     }
-    resetDraft()
+    if (editingIndex === null) {
+      if (onInventoryChange([...inventory, normalizedDraft])) resetDraft()
+    } else {
+      if (onInventoryChange(
+        inventory.map((product, index) => index === editingIndex ? normalizedDraft : product),
+      )) resetDraft()
+    }
   }
 
   function editProduct(index: number) {
@@ -1176,8 +1251,9 @@ function StudioAdmin({
   }
 
   function deleteProduct(index: number) {
-    onInventoryChange(inventory.filter((_, productIndex) => productIndex !== index))
-    if (editingIndex === index) resetDraft()
+    if (onInventoryChange(inventory.filter((_, productIndex) => productIndex !== index))) {
+      if (editingIndex === index) resetDraft()
+    }
   }
 
   async function handleStudioUpdateSubmit(event: FormEvent<HTMLFormElement>) {
@@ -1317,6 +1393,7 @@ function StudioAdmin({
                         <div className="admin-product-info">
                           <strong>{product.name}</strong>
                           <span>{product.price}</span>
+                          <span>{product.subtitle}</span>
                         </div>
                         <div className="admin-row-actions">
                           <button
@@ -1384,6 +1461,14 @@ function StudioAdmin({
                     id="product-description"
                     value={draft.description}
                     onChange={(event) => setDraft({ ...draft, description: event.target.value })}
+                    required
+                  />
+                  <label htmlFor="product-subtitle">Product subtext</label>
+                  <input
+                    id="product-subtitle"
+                    value={draft.subtitle}
+                    onChange={(event) => setDraft({ ...draft, subtitle: event.target.value })}
+                    placeholder="A short note shown beneath the description"
                     required
                   />
                   <div className="admin-form-actions">
@@ -1463,10 +1548,11 @@ function StudioAdmin({
                 )}
               </div>
             </section>
+            {catalogStatus && <p className="admin-notice" role="alert">{catalogStatus}</p>}
             <p className="admin-notice">
               Preview mode: the page is not protected by real authentication, and
-              product changes only affect this open session. Studio notes are
-              saved in this browser and are not shared with other visitors.
+              product listings and studio notes are saved only in this browser
+              and are not shared with other visitors.
             </p>
           </main>
         )}
@@ -1480,7 +1566,8 @@ function App() {
   const [notifyStatus, setNotifyStatus] = useState('')
   const [storyOpen, setStoryOpen] = useState(false)
   const [logoTwirling, setLogoTwirling] = useState(false)
-  const [catalog, setCatalog] = useState(products)
+  const [catalogState, setCatalogState] = useState(getCatalogState)
+  const { catalog, status: catalogStatus } = catalogState
   const [studioUpdatesState, setStudioUpdatesState] = useState(getStudioUpdatesState)
   const productGridRef = useRef<HTMLDivElement>(null)
   const storyTriggerRef = useRef<HTMLButtonElement>(null)
@@ -1488,13 +1575,34 @@ function App() {
   const logoTwirlTimeoutRef = useRef<number | undefined>(undefined)
 
   useEffect(() => {
-    function syncStudioUpdates() {
-      setStudioUpdatesState(getStudioUpdatesState())
+    function syncStorage(event: StorageEvent) {
+      if (event.key === studioUpdatesStorageKey) {
+        setStudioUpdatesState(getStudioUpdatesState())
+      }
+      if (event.key === catalogStorageKey) {
+        setCatalogState(getCatalogState())
+      }
     }
 
-    window.addEventListener('storage', syncStudioUpdates)
-    return () => window.removeEventListener('storage', syncStudioUpdates)
+    window.addEventListener('storage', syncStorage)
+    return () => window.removeEventListener('storage', syncStorage)
   }, [])
+
+  function updateCatalog(nextCatalog: Product[]) {
+    try {
+      window.localStorage.setItem(catalogStorageKey, JSON.stringify(nextCatalog))
+      setCatalogState({ catalog: nextCatalog, status: '' })
+      return true
+    } catch (error) {
+      setCatalogState((current) => ({
+        ...current,
+        status: error instanceof Error
+          ? `Could not save product listings: ${error.message}`
+          : 'Could not save product listings in this browser.',
+      }))
+      return false
+    }
+  }
 
   useEffect(() => () => {
     if (logoTwirlTimeoutRef.current !== undefined) {
@@ -1636,7 +1744,13 @@ function App() {
   }
 
   if (window.location.pathname === '/studio') {
-    return <StudioAdmin inventory={catalog} onInventoryChange={setCatalog} />
+    return (
+      <StudioAdmin
+        inventory={catalog}
+        onInventoryChange={updateCatalog}
+        catalogStatus={catalogStatus}
+      />
+    )
   }
 
   const productPath = window.location.pathname.match(/^\/piece\/([^/]+)\/?$/)
@@ -1744,7 +1858,7 @@ function App() {
                   <div className="product-details">
                     <div>
                       <h3>{product.name}</h3>
-                      <p>Handmade in Newtown, CT</p>
+                      <p>{product.subtitle}</p>
                     </div>
                     <span className="price">{product.price}</span>
                   </div>
