@@ -442,6 +442,8 @@ const styles = `
   .product-card:hover .buy-link svg, .buy-link:hover svg { transform: translate(.125rem, -.125rem); }
   .buy-link:hover { color: #a43c56 !important; }
   .product-detail { min-height: 100vh; background: radial-gradient(ellipse at 83% 12%, rgba(223,235,219,.62), transparent 35%), radial-gradient(ellipse at 8% 56%, rgba(246,224,210,.48), transparent 34%), #fffaf2; }
+  .product-detail a, .product-detail a:visited { color: inherit; text-decoration: none; }
+  .product-detail-header .wordmark, .product-detail-header .wordmark:visited { color: #293e48; }
   .product-detail-header { position: sticky; z-index: 5; top: 0; padding: 19px 0; border-bottom: 1px solid rgba(174,151,121,.25); background: rgba(255,250,242,.82); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
   .product-detail-header .shell { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
   .product-detail-main { padding: clamp(40px, 7vw, 76px) 0 70px; }
