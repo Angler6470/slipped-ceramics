@@ -242,55 +242,6 @@ async function prepareStudioPhoto(file: File): Promise<string> {
   })
 }
 
-type Glaze = {
-  id: string
-  name: string
-  finish: string
-  funFact: string
-  color: string
-  texture: string
-  swatch: string
-}
-
-const glazes: Glaze[] = [
-  {
-    id: 'morning-sky',
-    name: 'Morning Sky',
-    finish: 'Satin glaze with a lavender-blue drift',
-    funFact: 'A satin finish lets the blue and lavender tones soften into each other like a little patch of morning sky.',
-    color: 'url(#glazeSkyGradient)',
-    texture: 'url(#glazeMorningTexture)',
-    swatch: 'linear-gradient(145deg, #b4ced5 0%, #9ab8c7 48%, #c9b8d0 100%)',
-  },
-  {
-    id: 'moss-cream',
-    name: 'Moss & Cream',
-    finish: 'Sage green dip over raw stoneware',
-    funFact: 'The green dip leaves some warm clay peeking through, so every piece gets its own waterline.',
-    color: 'url(#glazeMossGradient)',
-    texture: 'url(#glazeMossTexture)',
-    swatch: 'linear-gradient(180deg, #77937b 0%, #9cae8d 58%, #d7c2a4 59%, #d7c2a4 100%)',
-  },
-  {
-    id: 'sandstone',
-    name: 'Sandstone',
-    finish: 'Warm satin cream with iron specks',
-    funFact: 'Iron-bearing stoneware reacts directly under flame to create natural, random iron speckles.',
-    color: 'url(#glazeSandGradient)',
-    texture: 'url(#glazeSandTexture)',
-    swatch: 'radial-gradient(#927960 1px, transparent 1.3px) 2px 3px / 10px 10px, linear-gradient(145deg, #e1c9a9, #c9ad89)',
-  },
-  {
-    id: 'deep-pine',
-    name: 'Deep Pine',
-    finish: 'Glossy forest glaze with a soft sheen',
-    funFact: 'A glossy forest glaze gathers the light differently across each curve, giving every fired piece a little depth.',
-    color: 'url(#glazePineGradient)',
-    texture: 'url(#glazePineTexture)',
-    swatch: 'linear-gradient(145deg, #42695b 0%, #244c42 62%, #173a35 100%)',
-  },
-]
-
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Playfair+Display:wght@400;500;600&display=swap');
 
@@ -361,8 +312,8 @@ const styles = `
   .button-light:hover { background: #42535a; color: #fff !important; }
   .hero { position: relative; isolation: isolate; min-height: 570px; display: flex; align-items: center; padding: 74px 0 80px; background: linear-gradient(115deg, #fff0e9 2%, #f8f0e4 50%, #e5f4ef 100%); }
   .hero::before, .hero::after { content: ''; position: absolute; z-index: -1; border-radius: 50%; filter: blur(1px); }
-  .hero::before { width: 370px; height: 370px; right: -100px; top: -145px; background: rgba(235, 173, 177, .38); }
-  .hero::after { width: 280px; height: 280px; left: 34%; bottom: -195px; background: rgba(151, 206, 182, .42); }
+  .hero::before { width: 370px; height: 370px; right: -100px; top: -145px; background: rgba(235, 173, 177, .38); transform: translate(var(--blob-x, 0px), var(--blob-y, 0px)); transition: transform .25s ease-out; }
+  .hero::after { width: 280px; height: 280px; left: 34%; bottom: -195px; background: rgba(151, 206, 182, .42); transform: translate(calc(var(--blob-x, 0px) * -.7), calc(var(--blob-y, 0px) * -.7)); transition: transform .3s ease-out; }
   .hero-grid { display: grid; grid-template-columns: 1fr .9fr; align-items: center; gap: 76px; }
   .eyebrow { margin: 0 0 18px; color: #a43c56; font-size: 10px; font-weight: 600; letter-spacing: .2em; text-transform: uppercase; }
   .hero h1 { max-width: 570px; margin: 0 0 19px; font-size: clamp(44px, 5.2vw, 68px); line-height: 1.08; letter-spacing: -.045em; }
@@ -380,64 +331,23 @@ const styles = `
   .hero-stamp { position: absolute; left: 0; top: 24px; width: 86px; height: 86px; display: grid; place-items: center; border: 1px solid rgba(255,255,255,.95); border-radius: 50%; background: #f8d7cb; color: #75434d; text-align: center; font-family: 'Playfair Display', Georgia, serif; font-size: 13px; line-height: 1.35; transform: rotate(-10deg); }
   .section { padding: 100px 0; }
   #home, #collection, #artist, #contact { scroll-margin-top: 108px; }
-  .glaze-studio { position: relative; overflow: hidden; padding: 78px 0 86px; background: radial-gradient(ellipse at 14% 12%, rgba(255,255,255,.8), transparent 35%), radial-gradient(ellipse at 86% 82%, rgba(195,173,201,.16), transparent 33%), #f4ede2; }
-  .glaze-studio::before { position: absolute; inset: 0; background-image: radial-gradient(rgba(117,76,53,.1) .65px, transparent .85px); background-size: 23px 23px; content: ''; opacity: .3; pointer-events: none; }
-  .glaze-studio .shell { position: relative; }
-  .glaze-heading { max-width: 680px; margin: 0 auto 35px; text-align: center; }
-  .glaze-heading .eyebrow { margin-bottom: 12px; color: #a65d54; }
-  .glaze-heading h2 { margin: 0 0 11px; font-size: clamp(38px, 5vw, 54px); line-height: 1.1; letter-spacing: -.04em; }
-  .glaze-heading > p:last-child { margin: 0 auto; color: #526367; font-size: 14px; line-height: 1.8; }
-  .glaze-experience { max-width: 940px; margin: 0 auto; padding: clamp(20px, 4vw, 40px); border: 1px solid rgba(139,111,83,.2); border-radius: 34px 13px 31px 14px / 20px 33px 15px 31px; background: rgba(255,253,249,.74); box-shadow: 0 20px 55px rgba(79,65,48,.09), inset 0 1px rgba(255,255,255,.85); }
-  .glaze-stage { position: relative; min-height: 310px; display: grid; place-items: center; overflow: hidden; border-radius: 27px 11px 24px 12px / 15px 26px 12px 23px; background: radial-gradient(ellipse at 50% 57%, rgba(225,210,188,.54), transparent 55%), linear-gradient(145deg, #f9f5ec, #eee5d8); }
-  .glaze-stage::before, .glaze-stage::after { position: absolute; width: 210px; height: 210px; border-radius: 50%; background: rgba(202,184,207,.13); content: ''; filter: blur(1px); }
-  .glaze-stage::before { top: -140px; right: 8%; }
-  .glaze-stage::after { bottom: -160px; left: 8%; width: 260px; height: 260px; background: rgba(158,184,167,.16); }
-  .glaze-mug { position: relative; z-index: 1; width: min(100%, 350px); height: auto; max-height: 330px; overflow: visible; filter: drop-shadow(0 18px 12px rgba(73,58,44,.16)); }
-  .glaze-body { fill: url(#rawStoneware); }
-  .glaze-wave { transform-box: fill-box; transform-origin: center; animation: glaze-pour-in .82s cubic-bezier(.4,0,.2,1) both; }
-  @keyframes glaze-pour-in { from { transform: translateY(-250px); } to { transform: translateY(0); } }
-  .glaze-handle { fill: none; stroke: #c7a989; stroke-width: 19; }
-  .glaze-handle-inset { fill: none; stroke: #eee0c9; stroke-width: 5; }
-  .glaze-rim { fill: #dac2a4; stroke: #a88968; stroke-width: 2; }
-  .glaze-rim-inner { fill: #f2e5d1; }
-  .glaze-highlight { fill: none; stroke: rgba(255,255,255,.48); stroke-linecap: round; stroke-width: 4; }
-  .glaze-foot { fill: none; stroke: #a98765; stroke-linecap: round; stroke-width: 8; }
-  .glaze-selection { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 12px; padding: 25px 10px 20px; }
-  .glaze-swatch { width: 53px; height: 53px; padding: 4px; border: 1px solid rgba(100,82,64,.22); border-radius: 50%; background: rgba(255,255,255,.55); cursor: pointer; transition: transform .3s ease, border-color .3s ease, box-shadow .3s ease; }
-  .glaze-swatch::before { display: block; width: 100%; height: 100%; border-radius: 50%; background: var(--swatch); content: ''; }
-  .glaze-swatch:hover { transform: translateY(-3px) scale(1.04); }
-  .glaze-swatch[aria-pressed="true"] { border-color: #9d5e52; box-shadow: 0 0 0 3px #f4ede2, 0 0 0 4px #9d5e52, 0 8px 18px rgba(68,54,44,.17); transform: translateY(-2px); }
-  .glaze-swatch:focus-visible { outline: 3px solid #9d5e52; outline-offset: 5px; }
-  .glaze-caption { min-height: 87px; padding-top: 4px; text-align: center; }
-  .glaze-caption h3 { margin: 0 0 4px; color: #34484e; font-family: 'Playfair Display', Georgia, serif; font-size: 22px; font-weight: 400; }
-  .glaze-caption p { margin: 0 0 10px; color: #6c716c; font-size: 12px; }
-  .glaze-fun-fact { max-width: 520px; margin: 12px auto 0 !important; padding: 10px 15px; border: 1px solid rgba(139,111,83,.17); border-radius: 15px 5px 14px 6px / 6px 14px 5px 15px; background: rgba(255,253,249,.72); color: #655748 !important; font-size: 11px !important; line-height: 1.65; }
-  .glaze-shop-link { display: inline-flex; align-items: center; gap: 5px; color: #805047 !important; font-size: 11px; font-weight: 600; letter-spacing: .02em; }
-  .glaze-shop-link svg { width: 13px; height: 13px; transition: transform .2s ease; }
-  .glaze-shop-link:hover svg { transform: translate(.125rem, -.125rem); }
-  .glaze-shop-link:focus-visible { outline: 2px solid #9d5e52; outline-offset: 4px; }
   .section#collection { padding: 72px 0; }
   .section#collection .section-heading { margin-bottom: 30px; }
   .section-heading { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin-bottom: 39px; }
   .section-heading h2 { margin: 0; font-size: clamp(34px, 4vw, 47px); letter-spacing: -.035em; }
   .section-heading p { max-width: 310px; margin: 0 0 5px; color: #50636a; font-size: 13px; line-height: 1.7; }
   .product-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 30px 24px; }
-  .product-card { position: relative; isolation: isolate; border-radius: 5px; transition: transform .7s ease-out, box-shadow .3s ease; }
-  .product-card::before { position: absolute; z-index: -1; inset: -12px; border-radius: 10px; background: #fffdf9; box-shadow: 0 12px 26px rgba(67,60,54,.11); content: ''; opacity: 0; transform: scale(.97); transition: opacity .3s ease, transform .45s cubic-bezier(.2,.7,.2,1); }
-  .product-card:hover { z-index: 1; transform: translateY(-4px); }
-  .product-card:hover::before { opacity: 1; transform: scale(1); }
-  .product-image { display: block; aspect-ratio: 1; overflow: hidden; background: #eee8e2; border-radius: 5px; transition: transform .35s ease-out; }
-  .product-card:hover .product-image { transform: scale(.96); }
-  .product-image img { height: 100%; transition: transform .7s ease-out; }
-  .product-card:hover .product-image img { transform: scale(1.03); }
-  .product-details { display: flex; align-items: start; justify-content: space-between; gap: 12px; padding: 15px 0 9px; transition: padding .35s ease-out; }
-  .product-card:hover .product-details { padding-inline: 8px; }
+  .product-card { position: relative; isolation: isolate; border-radius: 5px; transition: box-shadow .25s ease; }
+  .product-card::before { position: absolute; z-index: -1; inset: -12px; border-radius: 10px; background: #fffdf9; box-shadow: 0 12px 26px rgba(67,60,54,.11); content: ''; opacity: 0; transition: opacity .25s ease; }
+  .product-card:hover::before, .product-card:focus-within::before { opacity: 1; }
+  .product-image { display: block; aspect-ratio: 1; overflow: hidden; padding: 12px; background: #eee8e2; border-radius: 5px; }
+  .product-image img { height: 100%; object-fit: contain; }
+  .product-details { display: flex; align-items: start; justify-content: space-between; gap: 12px; padding: 15px 0 9px; }
   .product-details h3 { margin: 0 0 5px; font-size: 19px; line-height: 1.3; }
   .product-details p { margin: 0; color: #56696f; font-size: 12px; }
   .price { padding-top: 3px; color: #293e48; font-size: 13px; font-weight: 600; white-space: nowrap; }
   .buy-link { display: inline-flex; align-items: center; gap: 7px; color: #28635d !important; font-size: 11px; font-weight: 600; letter-spacing: .02em; }
-  .buy-link { margin-left: 0; transition: margin-left .35s ease-out, color .2s ease; }
-  .product-card:hover .buy-link { margin-left: 8px; }
+  .buy-link { transition: color .2s ease; }
   .buy-link svg { width: 13px; height: 13px; transition: transform .3s ease; }
   .product-card:hover .buy-link svg, .buy-link:hover svg { transform: translate(.125rem, -.125rem); }
   .buy-link:hover { color: #a43c56 !important; }
@@ -531,9 +441,11 @@ const styles = `
   .artist-grid { display: grid; grid-template-columns: .95fr 1fr; align-items: center; gap: clamp(42px, 8vw, 96px); }
   .artist-photo-wrap { position: relative; width: min(100%, 450px); }
   .artist-photo { aspect-ratio: 1 / 1.08; overflow: hidden; border: 7px solid rgba(255,250,240,.68); border-radius: 48% 48% 13px 13px; background: #a98d73; box-shadow: 0 18px 42px rgba(94,65,45,.14); }
-  .artist-photo img { height: 100%; object-position: center; transition: transform .7s cubic-bezier(.2,.7,.2,1); }
-  .artist-photo-wrap:hover img { transform: scale(1.035); }
+  .artist-photo img { height: 100%; object-position: center; animation: maker-photo-breathe 15s ease-in-out infinite alternate; }
+  @keyframes maker-photo-breathe { from { transform: scale(1); } to { transform: scale(1.055); } }
+  .artist-photo-wrap:hover img { animation-duration: 9s; }
   .artist-note { position: absolute; right: -18px; bottom: 22px; padding: 13px 18px; background: #fffdf9; color: #75434d; font-family: 'Playfair Display', Georgia, serif; font-size: 15px; font-style: italic; box-shadow: 0 8px 24px rgba(65, 56, 49, .12); transform: rotate(-2deg); }
+  .artist-copy { position: relative; z-index: 1; margin-left: -58px; padding: clamp(24px, 4vw, 43px); border: 1px solid rgba(255,250,240,.76); border-radius: 29px 11px 27px 12px / 14px 28px 12px 25px; background: rgba(255,250,240,.82); box-shadow: 0 16px 40px rgba(94,65,45,.1); -webkit-backdrop-filter: blur(9px); backdrop-filter: blur(9px); }
   .artist-copy .eyebrow { margin-bottom: 15px; color: #a43c56; }
   .artist-copy h2 { max-width: 530px; margin: 0 0 18px; font-size: clamp(38px, 4.5vw, 54px); line-height: 1.12; letter-spacing: -.035em; }
   .artist-copy p { max-width: 510px; margin: 0 0 24px; color: #3f555d; font-size: 14px; line-height: 1.9; }
@@ -546,7 +458,7 @@ const styles = `
   .story-overlay { position: fixed; z-index: 30; inset: 0; display: grid; place-items: center; overflow-y: auto; overscroll-behavior: contain; padding: 28px; background: rgba(33,37,34,.48); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
   .story-dialog { position: relative; width: min(100%, 920px); max-height: min(900px, calc(100dvh - 56px)); overflow: auto; overscroll-behavior: contain; border: 1px solid rgba(255,255,255,.7); border-radius: 34px 15px 30px 14px / 18px 32px 16px 34px; background: radial-gradient(rgba(117,76,53,.08) .65px, transparent .85px) 0 0 / 21px 21px, #fffaf0; box-shadow: 0 28px 90px rgba(20,26,22,.28); scrollbar-color: #c9ad91 transparent; }
   .story-dialog-inner { max-width: 760px; margin: 0 auto; padding: clamp(32px, 7vw, 76px); }
-  .story-close { position: sticky; z-index: 2; top: 18px; float: right; width: 46px; height: 46px; display: grid; place-items: center; margin: 16px 16px -62px 0; border: 1px solid rgba(114,68,47,.24); border-radius: 47% 53% 50% 45% / 52% 46% 54% 48%; background: rgba(255,253,249,.9); color: #4a4740; cursor: pointer; transition: background-color .2s, transform .2s; }
+  .story-close { position: sticky; z-index: 4; top: 12px; width: 46px; height: 46px; display: grid; place-items: center; margin: 12px 12px -58px auto; border: 1px solid rgba(114,68,47,.24); border-radius: 47% 53% 50% 45% / 52% 46% 54% 48%; background: rgba(255,253,249,.96); color: #4a4740; cursor: pointer; transition: background-color .2s, transform .2s; }
   .story-close:hover { background: #f1dfcb; transform: rotate(7deg); }
   .story-close svg { width: 19px; height: 19px; }
   .story-dialog .eyebrow { margin-bottom: 15px; color: #a43c56; }
@@ -627,12 +539,15 @@ const styles = `
   .contact-photo img { height: 100%; object-position: center 57%; transition: transform .65s cubic-bezier(.2,.7,.2,1); }
   .contact-photo-wrap:hover img { transform: scale(1.035); }
   .contact-photo-caption { display: flex; justify-content: space-between; gap: 12px; margin: 13px 9px 0; color: #655748; font-family: 'Playfair Display', Georgia, serif; font-size: 12px; font-style: italic; }
-  .contact-form { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; padding: clamp(23px, 3.2vw, 38px); border: 1px solid rgba(135,95,68,.18); border-radius: 38px 13px 34px 15px / 24px 37px 18px 31px; background: radial-gradient(rgba(117,76,53,.11) .65px, transparent .85px) 0 0 / 19px 19px, radial-gradient(rgba(255,255,255,.68), transparent 72%), #f5ead9; box-shadow: 0 20px 50px rgba(94,65,45,.12), inset 0 1px rgba(255,255,255,.72); }
-  .form-field { display: grid; gap: 7px; }
+  .contact-form { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; padding: clamp(23px, 3.2vw, 38px); border: 1px solid rgba(135,95,68,.18); border-radius: 38px 13px 34px 15px / 24px 37px 18px 31px; background: radial-gradient(rgba(117,76,53,.11) .65px, transparent .85px) 0 0 / 19px 19px, radial-gradient(rgba(255,255,255,.68), transparent 72%), #f5ead9; box-shadow: 0 20px 50px rgba(94,65,45,.12), inset 0 1px rgba(255,255,255,.72); transform: rotate(-.6deg); transition: transform .3s ease, box-shadow .3s ease; }
+  .contact-form:focus-within { transform: rotate(0); box-shadow: 0 22px 54px rgba(94,65,45,.15), inset 0 1px rgba(255,255,255,.72); }
+  .form-field { position: relative; display: grid; gap: 7px; }
+  .form-field::after { position: absolute; right: 0; bottom: 0; left: 0; height: 3px; border-radius: 999px; background: #a64f38; content: ''; transform: scaleX(0); transform-origin: left; transition: transform .45s cubic-bezier(.2,.75,.25,1); }
+  .form-field:focus-within::after { transform: scaleX(1); }
   .form-field-wide { grid-column: 1 / -1; }
   .form-field label { color: #4b463d; font-size: 12px; font-weight: 600; }
   .form-field input, .form-field textarea { width: 100%; min-height: 47px; border: 1px solid #c6aa8e; border-radius: 16px 5px 17px 6px / 6px 17px 5px 16px; padding: 12px 14px; background: rgba(255,252,245,.82); color: #293e48; font: 14px 'DM Sans', sans-serif; transition: border-color .2s, box-shadow .2s, background .2s; }
-  .form-field input:focus, .form-field textarea:focus { border-color: #8a6045; outline: 3px solid rgba(138,96,69,.28); outline-offset: 2px; background: #fffdf8; }
+  .form-field input:focus, .form-field textarea:focus { border-color: #8a6045; border-bottom-color: transparent; outline: 2px solid rgba(138,96,69,.2); outline-offset: 2px; background: #fffdf8; box-shadow: none; }
   .form-field textarea { min-height: 142px; resize: vertical; border-radius: 17px 6px 20px 5px / 7px 18px 6px 17px; }
   .contact-submit { position: relative; justify-self: start; min-height: 50px; padding: 0 21px 0 43px; border: 1px dashed #9c684d; border-radius: 999px; background: #fff5e8; color: #704b39 !important; cursor: pointer; box-shadow: 0 4px 0 rgba(156,104,77,.2); transition: transform .28s cubic-bezier(.2,.8,.25,1), box-shadow .28s, background-color .28s; }
   .contact-submit::before { position: absolute; left: 16px; color: #b86d50; content: '✿'; font-size: 16px; line-height: 1; transition: transform .35s cubic-bezier(.2,.8,.25,1); }
@@ -673,7 +588,6 @@ const styles = `
     .storefront.badges-reveal-ready .studio-badge.is-visible { opacity: 1; scale: 1; }
     .product-grid.reveal-ready .product-card { opacity: 0; transform: translateY(14px); transition: opacity .7s ease-out var(--reveal-delay, 0ms), transform .7s ease-out, box-shadow .3s ease; }
     .product-grid.reveal-ready .product-card.is-visible { opacity: 1; transform: translateY(0); }
-    .product-grid.reveal-ready .product-card.is-visible:hover { transform: translateY(-4px); }
     .product-grid.reveal-ready .product-card:nth-child(1) { --reveal-delay: 0ms; }
     .product-grid.reveal-ready .product-card:nth-child(2) { --reveal-delay: 90ms; }
     .product-grid.reveal-ready .product-card:nth-child(3) { --reveal-delay: 180ms; }
@@ -682,7 +596,8 @@ const styles = `
     .product-grid.reveal-ready .product-card:nth-child(6) { --reveal-delay: 450ms; }
   }
   @media (prefers-reduced-motion: reduce) {
-    .glaze-wave { animation: none; }
+    .artist-photo img { animation: none; }
+    .hero::before, .hero::after { transition: none; }
     .product-detail-enter .product-detail-photo,
     .product-detail-enter .product-detail-copy { animation: none; }
   }
@@ -708,7 +623,6 @@ const styles = `
     .artist-grid { gap: 46px; }
     .contact-grid { gap: 32px; }
     .contact-form { padding: 23px; gap: 14px; }
-    .glaze-stage { min-height: 280px; }
     .product-detail-grid { gap: 34px; }
     .studio-updates-grid { gap: 13px; }
     .studio-update-copy { padding: 13px 14px 15px; }
@@ -729,14 +643,6 @@ const styles = `
     .hero-stamp { left: 0; top: 13px; width: 73px; height: 73px; font-size: 11px; }
     .section { padding: 64px 0; }
     .section#collection { padding: 54px 0; }
-    .glaze-studio { padding: 58px 0 62px; }
-    .glaze-heading { margin-bottom: 25px; }
-    .glaze-heading > p:last-child { max-width: 330px; font-size: 13px; }
-    .glaze-experience { padding: 14px; }
-    .glaze-stage { min-height: 245px; }
-    .glaze-mug { width: min(100%, 300px); max-height: 260px; }
-    .glaze-selection { gap: 10px; padding: 21px 4px 18px; }
-    .glaze-swatch { width: 48px; height: 48px; }
     .section-heading { align-items: flex-start; flex-direction: column; gap: 10px; margin-bottom: 25px; }
     .section-heading p { font-size: 12px; }
     .product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 27px 13px; }
@@ -772,13 +678,14 @@ const styles = `
     .artist-section { padding: 62px 0; }
     .artist-grid { grid-template-columns: 1fr; gap: 31px; }
     .artist-photo-wrap { max-width: 410px; width: calc(100% - 14px); margin: 0 auto; }
+    .artist-copy { margin-left: 0; padding: 22px 0 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
     .artist-note { right: -14px; }
     .artist-copy h2 { font-size: 42px; }
     .artist-copy p { font-size: 13px; }
     .story-overlay { display: block; padding: 10px; }
     .story-dialog { width: 100%; max-height: calc(100dvh - 20px); min-height: calc(100dvh - 20px); border-radius: 28px 12px 25px 11px / 15px 27px 14px 28px; }
     .story-dialog-inner { padding: 61px 22px 40px; }
-    .story-close { position: sticky; top: 9px; width: 42px; height: 42px; margin: 9px 9px -51px 0; }
+    .story-close { top: 9px; width: 42px; height: 42px; margin: 9px 9px -51px auto; }
     .story-dialog h2 { font-size: clamp(36px, 10vw, 47px); }
     .story-dialog p { font-size: 14px; }
     .story-gallery { gap: 12px; margin-top: 27px; }
@@ -812,25 +719,23 @@ const styles = `
   .header-social { color: #4f4b43; font-size: 11px; }
   .nav-links { color: #31474d; }
   .header-social-separator { color: #8e8171; }
-  .hero-copy, .section-heading p, .glaze-heading > p:last-child,
-  .glaze-caption p, .product-details p, .artist-copy p,
+  .hero-copy, .section-heading p, .product-details p, .artist-copy p,
   .contact-copy .contact-description, .kiln-status-description,
   .studio-updates-heading > p, .product-detail-description {
     color: #3d4b4a;
   }
   .hero-note, .product-detail-note, .contact-photo-caption,
   .story-gallery figcaption { color: #51483f; }
-  .glaze-fun-fact, .quality-card p, .product-pairings-heading > p,
+  .quality-card p, .product-pairings-heading > p,
   .studio-update-copy p:last-child {
     color: #494d47;
   }
-  .product-details h3, .glaze-caption h3, .quality-card h3,
+  .product-details h3, .quality-card h3,
   .product-pairing-copy h3 { color: #263b40; font-weight: 500; }
   .price, .product-detail-price, .product-pairing-copy span { color: #643a2e; }
-  .buy-link, .glaze-shop-link, .product-detail-back,
+  .buy-link, .product-detail-back,
   .footer-shop { color: #20554d !important; font-weight: 600; }
   .footer-inner { color: #3c4e52; font-size: 12px; }
-  .glaze-fun-fact { color: #494239 !important; font-size: 12px !important; }
   .studio-update-category, .product-pairing-copy > p { color: #873f32; }
   .notify-status, .form-status { color: #673d30; }
   .form-field input::placeholder, .form-field textarea::placeholder,
@@ -856,152 +761,6 @@ const styles = `
     *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
   }
 `
-
-function GlazeStudio() {
-  const [selectedGlaze, setSelectedGlaze] = useState(glazes[0])
-  const [hoveredGlaze, setHoveredGlaze] = useState<Glaze | null>(null)
-
-  return (
-    <section className="glaze-studio" aria-labelledby="glaze-studio-title">
-      <div className="shell">
-        <div className="glaze-heading">
-          <p className="eyebrow">INTERACTIVE STUDIO</p>
-          <h2 id="glaze-studio-title">Dip, Fire, Collect.</h2>
-          <p>
-            Select a studio glaze to see how raw Newtown stoneware transforms
-            under the flame.
-          </p>
-        </div>
-
-        <div className="glaze-experience">
-          <div className="glaze-stage">
-            <svg
-              className="glaze-mug"
-              viewBox="0 0 340 380"
-              role="img"
-              aria-labelledby="glaze-mug-title"
-            >
-              <title id="glaze-mug-title">{selectedGlaze.name} glaze on a wheel-thrown stoneware mug</title>
-              <defs>
-                <linearGradient id="glazeSkyGradient" x1="0" y1="0" x2="1" y2="1">
-                  <stop offset="0%" stopColor="#c6d8d9" />
-                  <stop offset="52%" stopColor="#90b5c2" />
-                  <stop offset="100%" stopColor="#b6a4c1" />
-                </linearGradient>
-                <linearGradient id="glazeMossGradient" x1="0" y1="0" x2="0.9" y2="1">
-                  <stop offset="0%" stopColor="#a4b99b" />
-                  <stop offset="54%" stopColor="#718f78" />
-                  <stop offset="100%" stopColor="#597863" />
-                </linearGradient>
-                <linearGradient id="glazeSandGradient" x1="0" y1="0" x2="1" y2="1">
-                  <stop offset="0%" stopColor="#ead6b9" />
-                  <stop offset="100%" stopColor="#c9ad89" />
-                </linearGradient>
-                <linearGradient id="glazePineGradient" x1="0" y1="0" x2="1" y2="1">
-                  <stop offset="0%" stopColor="#648574" />
-                  <stop offset="45%" stopColor="#315c4e" />
-                  <stop offset="100%" stopColor="#173c35" />
-                </linearGradient>
-                <pattern id="glazeMorningTexture" width="30" height="28" patternUnits="userSpaceOnUse">
-                  <circle cx="5" cy="6" r="1.1" fill="#f2eee8" opacity=".68" />
-                  <circle cx="21" cy="15" r=".9" fill="#778d9c" opacity=".5" />
-                  <circle cx="11" cy="24" r=".75" fill="#f2eee8" opacity=".6" />
-                </pattern>
-                <pattern id="glazeMossTexture" width="29" height="27" patternUnits="userSpaceOnUse">
-                  <circle cx="5" cy="6" r=".9" fill="#e6e2d2" opacity=".52" />
-                  <circle cx="20" cy="17" r=".8" fill="#455f4b" opacity=".4" />
-                </pattern>
-                <pattern id="glazeSandTexture" width="28" height="25" patternUnits="userSpaceOnUse">
-                  <circle cx="4" cy="5" r="1" fill="#856c54" opacity=".67" />
-                  <circle cx="19" cy="15" r=".8" fill="#92775c" opacity=".57" />
-                  <circle cx="8" cy="22" r=".7" fill="#f1e2cc" opacity=".78" />
-                </pattern>
-                <pattern id="glazePineTexture" width="31" height="29" patternUnits="userSpaceOnUse">
-                  <path d="M3 6h8" stroke="#c6d5c4" strokeWidth="1.2" strokeLinecap="round" opacity=".32" />
-                  <circle cx="22" cy="19" r=".85" fill="#a5bba8" opacity=".46" />
-                </pattern>
-                <pattern id="rawStoneware" width="22" height="22" patternUnits="userSpaceOnUse">
-                  <rect width="22" height="22" fill="#d9c1a3" />
-                  <circle cx="5" cy="6" r="1" fill="#9e8060" opacity=".56" />
-                  <circle cx="17" cy="15" r=".8" fill="#a98b69" opacity=".5" />
-                </pattern>
-                <clipPath id="stonewareMugBody">
-                  <path d="M83 91 Q170 108 257 91 C251 145 255 224 247 286 C244 316 231 329 211 334 Q170 343 129 334 C109 329 96 316 93 286 C85 224 89 145 83 91 Z" />
-                </clipPath>
-              </defs>
-
-              <path className="glaze-handle" d="M246 139 C322 118 326 246 242 230" />
-              <path className="glaze-handle-inset" d="M251 148 C302 138 305 222 250 220" />
-              <path
-                className="glaze-body"
-                fill="url(#rawStoneware)"
-                d="M83 91 Q170 108 257 91 C251 145 255 224 247 286 C244 316 231 329 211 334 Q170 343 129 334 C109 329 96 316 93 286 C85 224 89 145 83 91 Z"
-              />
-              <g clipPath="url(#stonewareMugBody)">
-                <path
-                  key={selectedGlaze.id}
-                  className="glaze-wave"
-                  fill={selectedGlaze.color}
-                  d={
-                    selectedGlaze.id === 'moss-cream'
-                      ? 'M66 103 C101 79 126 107 157 94 C187 81 216 82 270 102 L254 270 L76 270 Z'
-                      : 'M66 103 C101 79 126 107 157 94 C187 81 216 82 270 102 L254 350 L76 350 Z'
-                  }
-                />
-                <path
-                  key={`${selectedGlaze.id}-texture`}
-                  className="glaze-wave"
-                  fill={selectedGlaze.texture}
-                  d={
-                    selectedGlaze.id === 'moss-cream'
-                      ? 'M66 103 C101 79 126 107 157 94 C187 81 216 82 270 102 L254 270 L76 270 Z'
-                      : 'M66 103 C101 79 126 107 157 94 C187 81 216 82 270 102 L254 350 L76 350 Z'
-                  }
-                />
-              </g>
-              <path className="glaze-highlight" d="M101 123 C105 182 103 229 106 263" />
-              <path className="glaze-rim" d="M82 91 Q170 108 258 91 L255 105 Q170 121 84 105 Z" />
-              <path className="glaze-rim-inner" d="M100 96 Q170 107 241 96 Q170 115 100 96 Z" />
-              <path className="glaze-foot" d="M119 333 Q170 344 221 333" />
-              <path d="M124 345 Q170 354 216 345" fill="none" stroke="#ead9c2" strokeWidth="4" strokeLinecap="round" />
-            </svg>
-          </div>
-
-          <div className="glaze-selection" role="group" aria-label="Choose a studio glaze">
-            {glazes.map((glaze) => (
-              <button
-                key={glaze.id}
-                className="glaze-swatch"
-                type="button"
-                style={{ background: glaze.swatch }}
-                aria-label={`Select ${glaze.name} glaze`}
-                aria-pressed={selectedGlaze.id === glaze.id}
-                title={glaze.name}
-                onClick={() => setSelectedGlaze(glaze)}
-                onMouseEnter={() => setHoveredGlaze(glaze)}
-                onMouseLeave={() => setHoveredGlaze(null)}
-                onFocus={() => setHoveredGlaze(glaze)}
-                onBlur={() => setHoveredGlaze(null)}
-              />
-            ))}
-          </div>
-
-          <div className="glaze-caption" aria-live="polite" aria-atomic="true">
-            <h3>{selectedGlaze.name}</h3>
-            <p>{selectedGlaze.finish}</p>
-            {hoveredGlaze && (
-              <p className="glaze-fun-fact">{hoveredGlaze.funFact}</p>
-            )}
-            <a className="glaze-shop-link" href={shopUrl} target="_blank" rel="noopener noreferrer">
-              Shop pieces in this glaze
-              <ArrowUpRight aria-hidden="true" />
-            </a>
-          </div>
-        </div>
-      </div>
-    </section>
-  )
-}
 
 function ClayDivider() {
   return (
@@ -1574,7 +1333,37 @@ function App() {
   const productGridRef = useRef<HTMLDivElement>(null)
   const storyTriggerRef = useRef<HTMLButtonElement>(null)
   const storyCloseRef = useRef<HTMLButtonElement>(null)
+  const heroRef = useRef<HTMLElement>(null)
   const logoTwirlTimeoutRef = useRef<number | undefined>(undefined)
+
+  useEffect(() => {
+    const hero = heroRef.current
+    if (hero === null) return
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+
+    const handleHeroMouseMove = (event: MouseEvent) => {
+      const bounds = hero.getBoundingClientRect()
+      const horizontalPosition = (event.clientX - bounds.left) / bounds.width
+      const verticalPosition = (event.clientY - bounds.top) / bounds.height
+      const shiftX = (0.5 - horizontalPosition) * 32
+      const shiftY = (0.5 - verticalPosition) * 24
+      hero.style.setProperty('--blob-x', `${shiftX}px`)
+      hero.style.setProperty('--blob-y', `${shiftY}px`)
+    }
+
+    const resetHeroBlobs = () => {
+      hero.style.removeProperty('--blob-x')
+      hero.style.removeProperty('--blob-y')
+    }
+
+    hero.addEventListener('mousemove', handleHeroMouseMove)
+    hero.addEventListener('mouseleave', resetHeroBlobs)
+    return () => {
+      hero.removeEventListener('mousemove', handleHeroMouseMove)
+      hero.removeEventListener('mouseleave', resetHeroBlobs)
+      resetHeroBlobs()
+    }
+  }, [])
 
   useEffect(() => {
     function syncStorage(event: StorageEvent) {
@@ -1803,7 +1592,7 @@ function App() {
       </header>
 
       <main>
-        <section className="hero" id="home">
+        <section className="hero" id="home" ref={heroRef}>
           <div className="shell hero-grid">
             <div>
               <p className="eyebrow">Small-batch pottery · Newtown, Connecticut</p>
@@ -1834,8 +1623,6 @@ function App() {
           </div>
         </section>
 
-        <ClayDivider />
-        <GlazeStudio />
         <ClayDivider />
 
         <section className="section" id="collection">
