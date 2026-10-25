@@ -455,7 +455,7 @@ const styles = `
   .artist-story-trigger:focus-visible, .story-close:focus-visible { outline: 3px solid #8a6045; outline-offset: 4px; }
   .artist-story-trigger svg { width: 15px; height: 15px; transition: transform .3s; }
   .artist-story-trigger:hover svg { transform: translate(.125rem, -.125rem); }
-  .story-overlay { position: fixed; z-index: 30; inset: 0; display: grid; place-items: center; overflow-y: auto; overscroll-behavior: contain; padding: 28px; background: rgba(33,37,34,.48); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+  .story-overlay { position: fixed; z-index: 100; inset: 0; display: grid; place-items: center; overflow-y: auto; overscroll-behavior: contain; padding: 28px; background: rgba(33,37,34,.48); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
   .story-dialog { position: relative; width: min(100%, 920px); max-height: min(900px, calc(100dvh - 56px)); overflow: auto; overscroll-behavior: contain; border: 1px solid rgba(255,255,255,.7); border-radius: 34px 15px 30px 14px / 18px 32px 16px 34px; background: radial-gradient(rgba(117,76,53,.08) .65px, transparent .85px) 0 0 / 21px 21px, #fffaf0; box-shadow: 0 28px 90px rgba(20,26,22,.28); scrollbar-color: #c9ad91 transparent; }
   .story-dialog-inner { max-width: 760px; margin: 0 auto; padding: clamp(32px, 7vw, 76px); }
   .story-close { position: sticky; z-index: 4; top: 12px; width: 46px; height: 46px; display: grid; place-items: center; margin: 12px 12px -58px auto; border: 1px solid rgba(114,68,47,.24); border-radius: 47% 53% 50% 45% / 52% 46% 54% 48%; background: rgba(255,253,249,.96); color: #4a4740; cursor: pointer; transition: background-color .2s, transform .2s; }
