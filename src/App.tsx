@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
+import heroBackground from './assets/hero-bg.mp4'
 import {
   ArrowUpRight,
-  Coffee,
   ExternalLink,
   Hand,
   Heart,
@@ -310,25 +310,22 @@ const styles = `
   .button svg { width: 15px; height: 15px; }
   .button-light { background: transparent; color: #42535a !important; }
   .button-light:hover { background: #42535a; color: #fff !important; }
-  .hero { position: relative; isolation: isolate; min-height: 570px; display: flex; align-items: center; padding: 74px 0 80px; background: linear-gradient(115deg, #fff0e9 2%, #f8f0e4 50%, #e5f4ef 100%); }
-  .hero::before, .hero::after { content: ''; position: absolute; z-index: -1; border-radius: 50%; filter: blur(1px); }
-  .hero::before { width: 370px; height: 370px; right: -100px; top: -145px; background: rgba(235, 173, 177, .38); transform: translate(var(--blob-x, 0px), var(--blob-y, 0px)); transition: transform .25s ease-out; }
-  .hero::after { width: 280px; height: 280px; left: 34%; bottom: -195px; background: rgba(151, 206, 182, .42); transform: translate(calc(var(--blob-x, 0px) * -.7), calc(var(--blob-y, 0px) * -.7)); transition: transform .3s ease-out; }
-  .hero-grid { display: grid; grid-template-columns: 1fr .9fr; align-items: center; gap: 76px; }
+  .hero { position: relative; isolation: isolate; min-height: calc(100vh - 84px); min-height: calc(100svh - 84px); display: flex; align-items: center; overflow: hidden; padding: 48px 0; background: #34423d; }
+  .hero::before { position: absolute; z-index: -1; inset: 0; background: linear-gradient(90deg, rgba(22,34,30,.65), rgba(22,34,30,.4) 60%, rgba(22,34,30,.16)); content: ''; }
+  .hero-video { position: absolute; z-index: -2; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center; }
+  .hero-grid { position: relative; width: min(1180px, calc(100% - 56px)); margin: 0 auto; }
+  .hero-content { max-width: 760px; padding: clamp(25px, 4vw, 44px); border: 1px solid rgba(255,247,232,.27); border-left: 4px solid #d28a69; border-radius: 30px 10px 28px 12px / 14px 27px 12px 26px; background: rgba(25,39,34,.68); box-shadow: 0 22px 60px rgba(13,24,20,.2), inset 0 1px rgba(255,255,255,.08); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
   .eyebrow { margin: 0 0 18px; color: #a43c56; font-size: 10px; font-weight: 600; letter-spacing: .2em; text-transform: uppercase; }
-  .hero h1 { max-width: 570px; margin: 0 0 19px; font-size: clamp(44px, 5.2vw, 68px); line-height: 1.08; letter-spacing: -.045em; }
-  .hero-copy { max-width: 440px; margin-bottom: 30px; color: #435860; font-size: 15px; line-height: 1.8; }
-  .hero-note { margin: 20px 0 0; color: #536a67; font-size: 11px; letter-spacing: .04em; }
-  .hero-art { position: relative; width: min(100%, 440px); height: 390px; justify-self: end; }
-  .hero-photo { position: absolute; inset: 0 24px 0 38px; overflow: hidden; border-radius: 48% 48% 4px 4px; background: #b8d9d1; }
-  .hero-photo img { height: 100%; }
+  .hero .eyebrow { display: inline-block; margin-bottom: 23px; padding: 9px 12px; border: 1px solid rgba(255,229,211,.38); border-radius: 999px; background: rgba(255,243,226,.1); color: #ffe1ca; font-size: 10px; letter-spacing: .16em; }
+  .hero h1 { max-width: 650px; margin: 0 0 21px; color: #fffaf0; font-size: clamp(44px, 5.2vw, 70px); line-height: 1.08; letter-spacing: -.045em; text-shadow: 0 2px 24px rgba(0,0,0,.38); }
+  .hero-copy { max-width: 540px; margin-bottom: 31px; color: #f8f3e8; font-size: 16px; line-height: 1.8; text-shadow: 0 1px 10px rgba(0,0,0,.38); }
+  .hero-note { margin: 20px 0 0; color: #f3e5d1; font-size: 12px; letter-spacing: .04em; }
+  .hero .button { border-color: #e2b18b; background: #e2b18b; color: #263b35 !important; box-shadow: 0 5px 16px rgba(12,24,20,.2); }
+  .hero .button:hover { border-color: #f0c39f; background: #f0c39f; color: #20332e !important; }
   .clay-divider { position: relative; z-index: 1; height: 0; color: #94775c; pointer-events: none; }
   .clay-divider svg { position: absolute; top: 50%; left: 0; width: 100%; height: 32px; overflow: visible; transform: translateY(-50%); }
   .clay-divider path { fill: none; stroke: currentColor; stroke-width: 1.15; stroke-linecap: round; opacity: .34; }
   .clay-divider path + path { stroke-width: .8; opacity: .2; }
-  .hero-caption { position: absolute; right: 0; bottom: 22px; display: flex; align-items: center; gap: 10px; padding: 13px 16px; background: #fffdf9; color: #344b53; font-size: 11px; box-shadow: 0 10px 35px rgba(67, 60, 54, .12); }
-  .hero-caption svg { width: 16px; color: #b5435d; }
-  .hero-stamp { position: absolute; left: 0; top: 24px; width: 86px; height: 86px; display: grid; place-items: center; border: 1px solid rgba(255,255,255,.95); border-radius: 50%; background: #f8d7cb; color: #75434d; text-align: center; font-family: 'Playfair Display', Georgia, serif; font-size: 13px; line-height: 1.35; transform: rotate(-10deg); }
   .section { padding: 100px 0; }
   #home, #collection, #artist, #contact { scroll-margin-top: 108px; }
   .section#collection { padding: 72px 0; }
@@ -562,14 +559,6 @@ const styles = `
   .footer-shop { display: inline-flex; align-items: center; gap: 6px; color: #50676b !important; font-weight: 400; }
   .footer-shop svg { width: 13px; }
   @media (prefers-reduced-motion: no-preference) {
-    @keyframes slow-float {
-      0%, 100% { translate: 0 0; }
-      50% { translate: 0 -6px; }
-    }
-    @keyframes arch-entrance {
-      from { opacity: 0; transform: scale(.98); }
-      to { opacity: 1; transform: scale(1); }
-    }
     @keyframes story-backdrop-in {
       from { opacity: 0; }
       to { opacity: 1; }
@@ -578,9 +567,6 @@ const styles = `
       from { opacity: 0; clip-path: ellipse(0% 0% at 50% 48%); transform: scale(.97); }
       to { opacity: 1; clip-path: ellipse(100% 100% at 50% 48%); transform: scale(1); }
     }
-    .hero::before, .hero::after { animation: slow-float 7s ease-in-out infinite; }
-    .hero::after { animation-delay: -3.5s; }
-    .hero-photo { animation: arch-entrance .8s ease-out both; }
     .story-overlay { animation: story-backdrop-in .35s ease-out both; }
     .story-dialog { animation: story-bloom-in .75s cubic-bezier(.16,1,.3,1) both; }
     .studio-badge { translate: 0 var(--badge-scroll-y, 0px); }
@@ -597,7 +583,6 @@ const styles = `
   }
   @media (prefers-reduced-motion: reduce) {
     .artist-photo img { animation: none; }
-    .hero::before, .hero::after { transition: none; }
     .product-detail-enter .product-detail-photo,
     .product-detail-enter .product-detail-copy { animation: none; }
   }
@@ -608,9 +593,7 @@ const styles = `
     .nav-links { position: static; max-width: 100%; font-size: 12px; transform: none; }
     .nav-links a { padding: 8px 17px; }
     .header-social { display: none; }
-    .hero { min-height: auto; padding: 66px 0 62px; }
-    .hero-grid { grid-template-columns: 1fr .82fr; gap: 26px; }
-    .hero-art { height: 330px; }
+    .hero { min-height: calc(100vh - 112px); min-height: calc(100svh - 112px); padding: 66px 0 62px; }
     .hero h1 { font-size: clamp(39px, 6vw, 54px); }
     .section { padding: 76px 0; }
     .product-grid { gap: 32px 18px; }
@@ -634,13 +617,12 @@ const styles = `
     .wordmark { font-size: 21px; }
     .nav-links { order: initial; width: fit-content; justify-content: center; gap: 0; font-size: 11px; }
     .nav-links a { padding: 8px 14px; }
-    .hero { padding: 53px 0 46px; }
-    .hero-grid { grid-template-columns: 1fr; gap: 35px; }
-    .hero h1 { max-width: 450px; font-size: clamp(43px, 12vw, 58px); }
-    .hero-copy { font-size: 14px; }
-    .hero-art { width: 100%; max-width: 430px; height: 310px; justify-self: center; }
-    .hero-photo { inset-inline: 25px; }
-    .hero-stamp { left: 0; top: 13px; width: 73px; height: 73px; font-size: 11px; }
+    .hero { min-height: calc(100vh - 110px); min-height: calc(100svh - 110px); padding: 34px 0; }
+    .hero-content { padding: 25px 20px; }
+    .hero .eyebrow { margin-bottom: 19px; font-size: 9px; letter-spacing: .12em; }
+    .hero h1 { max-width: 520px; margin-bottom: 17px; font-size: clamp(41px, 11vw, 56px); }
+    .hero-copy { margin-bottom: 24px; font-size: 14px; line-height: 1.75; }
+    .hero-note { margin-top: 17px; }
     .section { padding: 64px 0; }
     .section#collection { padding: 54px 0; }
     .section-heading { align-items: flex-start; flex-direction: column; gap: 10px; margin-bottom: 25px; }
@@ -738,6 +720,10 @@ const styles = `
   .footer-inner { color: #3c4e52; font-size: 12px; }
   .studio-update-category, .product-pairing-copy > p { color: #873f32; }
   .notify-status, .form-status { color: #673d30; }
+  .storefront .hero .eyebrow { color: #ffe1ca; }
+  .storefront .hero h1 { color: #fffaf0; }
+  .storefront .hero .hero-copy { color: #f8f3e8; }
+  .storefront .hero .hero-note { color: #f3e5d1; }
   .form-field input::placeholder, .form-field textarea::placeholder,
   .notify-form input::placeholder { color: #5b5a52; opacity: 1; }
   .admin-login-card > p:not(.admin-kicker), .admin-heading p:not(.admin-kicker),
@@ -1333,37 +1319,7 @@ function App() {
   const productGridRef = useRef<HTMLDivElement>(null)
   const storyTriggerRef = useRef<HTMLButtonElement>(null)
   const storyCloseRef = useRef<HTMLButtonElement>(null)
-  const heroRef = useRef<HTMLElement>(null)
   const logoTwirlTimeoutRef = useRef<number | undefined>(undefined)
-
-  useEffect(() => {
-    const hero = heroRef.current
-    if (hero === null) return
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
-
-    const handleHeroMouseMove = (event: MouseEvent) => {
-      const bounds = hero.getBoundingClientRect()
-      const horizontalPosition = (event.clientX - bounds.left) / bounds.width
-      const verticalPosition = (event.clientY - bounds.top) / bounds.height
-      const shiftX = (0.5 - horizontalPosition) * 32
-      const shiftY = (0.5 - verticalPosition) * 24
-      hero.style.setProperty('--blob-x', `${shiftX}px`)
-      hero.style.setProperty('--blob-y', `${shiftY}px`)
-    }
-
-    const resetHeroBlobs = () => {
-      hero.style.removeProperty('--blob-x')
-      hero.style.removeProperty('--blob-y')
-    }
-
-    hero.addEventListener('mousemove', handleHeroMouseMove)
-    hero.addEventListener('mouseleave', resetHeroBlobs)
-    return () => {
-      hero.removeEventListener('mousemove', handleHeroMouseMove)
-      hero.removeEventListener('mouseleave', resetHeroBlobs)
-      resetHeroBlobs()
-    }
-  }, [])
 
   useEffect(() => {
     function syncStorage(event: StorageEvent) {
@@ -1592,9 +1548,12 @@ function App() {
       </header>
 
       <main>
-        <section className="hero" id="home" ref={heroRef}>
+        <section className="hero" id="home">
+          <video className="hero-video" autoPlay muted loop playsInline aria-hidden="true">
+            <source src={heroBackground} type="video/mp4" />
+          </video>
           <div className="shell hero-grid">
-            <div>
+            <div className="hero-content">
               <p className="eyebrow">Small-batch pottery · Newtown, Connecticut</p>
               <h1>Handcrafted Ceramics for Everyday Moments.</h1>
               <p className="hero-copy">
@@ -1606,19 +1565,6 @@ function App() {
                 Shop available pieces <span aria-hidden="true">↘</span>
               </a>
               <p className="hero-note">Made by hand, meant to be held.</p>
-            </div>
-            <div className="hero-art" aria-label="A glimpse of Kelly's handmade pottery">
-              <div className="hero-photo">
-                <img
-                  src={products[0].image}
-                  alt={products[0].alt}
-                />
-              </div>
-              <div className="hero-stamp studio-badge">made<br />with care</div>
-              <div className="hero-caption">
-                <Coffee aria-hidden="true" />
-                <span>A little everyday lovely</span>
-              </div>
             </div>
           </div>
         </section>
