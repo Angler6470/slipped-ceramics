@@ -3,21 +3,52 @@ import {
   ArrowUpRight,
   Coffee,
   ExternalLink,
+  Hand,
+  Heart,
   LockKeyhole,
   Palette,
   Pencil,
   Plus,
+  ShieldCheck,
   Trash2,
   X,
 } from 'lucide-react'
 
 const shopUrl = 'https://www.etsy.com/shop/SlippedCeramics'
 
+const productPairings: Record<string, string[]> = {
+  'colorful-speckled-stoneware-mug': [
+    'carved-blueberry-tumbler',
+    'blue-glazed-ceramic-cup-set',
+  ],
+  'speckled-ceramic-catch-all': [
+    'speckled-ombre-vase',
+    'speckled-ceramic-bowl',
+  ],
+  'speckled-ceramic-bowl': [
+    'speckled-ceramic-catch-all',
+    'carved-blueberry-tumbler',
+  ],
+  'carved-blueberry-tumbler': [
+    'colorful-speckled-stoneware-mug',
+    'speckled-ceramic-bowl',
+  ],
+  'speckled-ombre-vase': [
+    'speckled-ceramic-catch-all',
+    'blue-glazed-ceramic-cup-set',
+  ],
+  'blue-glazed-ceramic-cup-set': [
+    'colorful-speckled-stoneware-mug',
+    'carved-blueberry-tumbler',
+  ],
+}
+
 type Product = {
   name: string
   price: string
   image: string
   alt: string
+  description: string
 }
 
 const products: Product[] = [
@@ -26,43 +57,147 @@ const products: Product[] = [
     price: '$52.00',
     image: '/products/blue-speckled-mug.webp',
     alt: 'Handmade blue-speckled stoneware mug held outdoors',
+    description: 'A one-of-a-kind wheel-thrown stoneware mug finished in a soft blue-speckled glaze. Its comfortable handle and generous shape make it a lovely companion for everyday coffee or tea.',
   },
   {
     name: 'Speckled Ceramic Catch-All',
     price: '$33.50',
     image: '/products/scalloped-catchall.webp',
     alt: 'Handmade speckled ceramic dish with a softly scalloped edge',
+    description: 'A hand-shaped speckled stoneware catch-all with an easy, softly scalloped edge. Keep it by the sink for rings, on a desk for small treasures, or wherever a little handmade detail belongs.',
   },
   {
     name: 'Speckled Ceramic Bowl',
     price: '$42.50',
     image: '/products/green-rim-bowl.webp',
     alt: 'Handmade speckled ceramic bowl with a mint-green rim',
+    description: 'This small-batch stoneware bowl pairs a softly speckled clay body with a fresh green rim. Each one is shaped and glazed by hand, so the details are always its own.',
   },
   {
     name: 'Carved Blueberry Tumbler',
     price: '$48.00',
     image: '/products/blueberry-tumbler.webp',
     alt: 'Wheel-thrown cream tumbler with carved lines and blueberry details',
+    description: 'A wheel-thrown cream stoneware tumbler with hand-carved lines and tiny blueberry details. The tactile grooves and one-of-a-kind surface make it a cheerful piece for slow sips.',
   },
   {
     name: 'Speckled Ombre Vase',
     price: 'See listing',
     image: '/products/speckled-vase.webp',
     alt: 'Round handmade vase with a soft pink and cream speckled glaze',
+    description: 'A round, hand-thrown stoneware vase with a warm pink-and-cream glaze that settles into a soft, speckled finish. Lovely with a few garden stems or simply as a sculptural little accent.',
   },
   {
     name: 'Blue Glazed Ceramic Cup Set',
     price: 'See listing',
     image: '/products/blue-cup-set.webp',
     alt: 'Three handmade cups with blue glaze arranged together',
+    description: 'A set of three individually wheel-thrown cups in a softly varied blue glaze. Their subtle differences celebrate the small marks and variations that make handmade pottery special.',
   },
 ]
+
+type StudioUpdate = {
+  id: string
+  caption: string
+  category: string
+  image: string
+  postedAt: string
+}
+
+const studioUpdatesStorageKey = 'slipped-ceramics-studio-updates'
+const maxStudioUpdates = 9
+const maxStudioPhotoBytes = 8 * 1024 * 1024
+
+function isStudioUpdate(update: unknown): update is StudioUpdate {
+  if (!update || typeof update !== 'object') return false
+  return (
+    'id' in update &&
+    typeof update.id === 'string' &&
+    'caption' in update &&
+    typeof update.caption === 'string' &&
+    'category' in update &&
+    typeof update.category === 'string' &&
+    'image' in update &&
+    typeof update.image === 'string' &&
+    'postedAt' in update &&
+    typeof update.postedAt === 'string'
+  )
+}
+
+function readStudioUpdates(): StudioUpdate[] {
+  const storedUpdates = window.localStorage.getItem(studioUpdatesStorageKey)
+  if (!storedUpdates) return []
+
+  const updates: unknown = JSON.parse(storedUpdates)
+  if (!Array.isArray(updates) || !updates.every(isStudioUpdate)) {
+    throw new Error('Saved studio notes have an unexpected format.')
+  }
+  return updates.slice(0, maxStudioUpdates)
+}
+
+type StudioUpdatesState = {
+  updates: StudioUpdate[]
+  status: string
+}
+
+function getStudioUpdatesState(): StudioUpdatesState {
+  try {
+    return { updates: readStudioUpdates(), status: '' }
+  } catch (error) {
+    return {
+      updates: [],
+      status: error instanceof Error ? error.message : 'Could not load studio notes.',
+    }
+  }
+}
+
+async function prepareStudioPhoto(file: File): Promise<string> {
+  if (file.size > maxStudioPhotoBytes) {
+    throw new Error('Choose a photo smaller than 8 MB.')
+  }
+  if (!file.type.startsWith('image/')) {
+    throw new Error('Choose an image file to post.')
+  }
+
+  const photo = await createImageBitmap(file)
+  const scale = Math.min(1, 1280 / Math.max(photo.width, photo.height))
+  const canvas = document.createElement('canvas')
+  canvas.width = Math.round(photo.width * scale)
+  canvas.height = Math.round(photo.height * scale)
+  const context = canvas.getContext('2d')
+  if (!context) {
+    photo.close()
+    throw new Error('This browser could not prepare the photo.')
+  }
+  context.drawImage(photo, 0, 0, canvas.width, canvas.height)
+  photo.close()
+
+  const compressedPhoto = await new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob(
+      (blob) => blob
+        ? resolve(blob)
+        : reject(new Error('This browser could not compress the photo.')),
+      'image/jpeg',
+      0.8,
+    )
+  })
+
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => {
+      if (typeof reader.result === 'string') resolve(reader.result)
+      else reject(new Error('This browser could not read the prepared photo.'))
+    }
+    reader.onerror = () => reject(new Error('This browser could not read the prepared photo.'))
+    reader.readAsDataURL(compressedPhoto)
+  })
+}
 
 type Glaze = {
   id: string
   name: string
   finish: string
+  funFact: string
   color: string
   texture: string
   swatch: string
@@ -73,6 +208,7 @@ const glazes: Glaze[] = [
     id: 'morning-sky',
     name: 'Morning Sky',
     finish: 'Satin glaze with a lavender-blue drift',
+    funFact: 'A satin finish lets the blue and lavender tones soften into each other like a little patch of morning sky.',
     color: 'url(#glazeSkyGradient)',
     texture: 'url(#glazeMorningTexture)',
     swatch: 'linear-gradient(145deg, #b4ced5 0%, #9ab8c7 48%, #c9b8d0 100%)',
@@ -81,6 +217,7 @@ const glazes: Glaze[] = [
     id: 'moss-cream',
     name: 'Moss & Cream',
     finish: 'Sage green dip over raw stoneware',
+    funFact: 'The green dip leaves some warm clay peeking through, so every piece gets its own waterline.',
     color: 'url(#glazeMossGradient)',
     texture: 'url(#glazeMossTexture)',
     swatch: 'linear-gradient(180deg, #77937b 0%, #9cae8d 58%, #d7c2a4 59%, #d7c2a4 100%)',
@@ -89,6 +226,7 @@ const glazes: Glaze[] = [
     id: 'sandstone',
     name: 'Sandstone',
     finish: 'Warm satin cream with iron specks',
+    funFact: 'Iron-bearing stoneware reacts directly under flame to create natural, random iron speckles.',
     color: 'url(#glazeSandGradient)',
     texture: 'url(#glazeSandTexture)',
     swatch: 'radial-gradient(#927960 1px, transparent 1.3px) 2px 3px / 10px 10px, linear-gradient(145deg, #e1c9a9, #c9ad89)',
@@ -97,6 +235,7 @@ const glazes: Glaze[] = [
     id: 'deep-pine',
     name: 'Deep Pine',
     finish: 'Glossy forest glaze with a soft sheen',
+    funFact: 'A glossy forest glaze gathers the light differently across each curve, giving every fired piece a little depth.',
     color: 'url(#glazePineGradient)',
     texture: 'url(#glazePineTexture)',
     swatch: 'linear-gradient(145deg, #42695b 0%, #244c42 62%, #173a35 100%)',
@@ -137,7 +276,7 @@ const styles = `
   }
   .storefront h1, .storefront h2, .storefront h3, .storefront p { margin-top: 0; }
   .shell { width: min(1180px, calc(100% - 56px)); margin: 0 auto; }
-  .site-header { position: sticky; z-index: 10; top: 0; height: 84px; display: flex; align-items: center; border-bottom: 1px solid #e5e8e2; background: #fffdf9; }
+  .site-header { position: sticky; z-index: 50; top: 0; height: 84px; display: flex; align-items: center; border-bottom: 1px solid rgba(231,225,216,.5); background: rgba(250,247,242,.8); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
   .header-inner { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 28px; }
   .wordmark { display: inline-flex; align-items: center; gap: 10px; color: #293e48; font-family: 'Playfair Display', Georgia, serif; font-size: 23px; letter-spacing: -.6px; white-space: nowrap; }
   .wordmark-icon { color: #c45e69; }
@@ -183,6 +322,10 @@ const styles = `
   .hero-art { position: relative; width: min(100%, 440px); height: 390px; justify-self: end; }
   .hero-photo { position: absolute; inset: 0 24px 0 38px; overflow: hidden; border-radius: 48% 48% 4px 4px; background: #b8d9d1; }
   .hero-photo img { height: 100%; }
+  .clay-divider { position: relative; z-index: 1; height: 0; color: #94775c; pointer-events: none; }
+  .clay-divider svg { position: absolute; top: 50%; left: 0; width: 100%; height: 32px; overflow: visible; transform: translateY(-50%); }
+  .clay-divider path { fill: none; stroke: currentColor; stroke-width: 1.15; stroke-linecap: round; opacity: .34; }
+  .clay-divider path + path { stroke-width: .8; opacity: .2; }
   .hero-caption { position: absolute; right: 0; bottom: 22px; display: flex; align-items: center; gap: 10px; padding: 13px 16px; background: #fffdf9; color: #344b53; font-size: 11px; box-shadow: 0 10px 35px rgba(67, 60, 54, .12); }
   .hero-caption svg { width: 16px; color: #b5435d; }
   .hero-stamp { position: absolute; left: 0; top: 24px; width: 86px; height: 86px; display: grid; place-items: center; border: 1px solid rgba(255,255,255,.95); border-radius: 50%; background: #f8d7cb; color: #75434d; text-align: center; font-family: 'Playfair Display', Georgia, serif; font-size: 13px; line-height: 1.35; transform: rotate(-10deg); }
@@ -219,6 +362,7 @@ const styles = `
   .glaze-caption { min-height: 87px; padding-top: 4px; text-align: center; }
   .glaze-caption h3 { margin: 0 0 4px; color: #34484e; font-family: 'Playfair Display', Georgia, serif; font-size: 22px; font-weight: 400; }
   .glaze-caption p { margin: 0 0 10px; color: #6c716c; font-size: 12px; }
+  .glaze-fun-fact { max-width: 520px; margin: 12px auto 0 !important; padding: 10px 15px; border: 1px solid rgba(139,111,83,.17); border-radius: 15px 5px 14px 6px / 6px 14px 5px 15px; background: rgba(255,253,249,.72); color: #655748 !important; font-size: 11px !important; line-height: 1.65; }
   .glaze-shop-link { display: inline-flex; align-items: center; gap: 5px; color: #805047 !important; font-size: 11px; font-weight: 600; letter-spacing: .02em; }
   .glaze-shop-link svg { width: 13px; height: 13px; transition: transform .2s ease; }
   .glaze-shop-link:hover svg { transform: translate(.125rem, -.125rem); }
@@ -248,6 +392,90 @@ const styles = `
   .buy-link svg { width: 13px; height: 13px; transition: transform .3s ease; }
   .product-card:hover .buy-link svg, .buy-link:hover svg { transform: translate(.125rem, -.125rem); }
   .buy-link:hover { color: #a43c56 !important; }
+  .product-detail { min-height: 100vh; background: radial-gradient(ellipse at 83% 12%, rgba(223,235,219,.62), transparent 35%), radial-gradient(ellipse at 8% 56%, rgba(246,224,210,.48), transparent 34%), #fffaf2; }
+  .product-detail-header { position: sticky; z-index: 5; top: 0; padding: 19px 0; border-bottom: 1px solid rgba(174,151,121,.25); background: rgba(255,250,242,.82); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+  .product-detail-header .shell { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+  .product-detail-main { padding: clamp(40px, 7vw, 76px) 0 70px; }
+  .product-detail-grid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(300px, .9fr); align-items: center; gap: clamp(32px, 6vw, 78px); }
+  .product-detail-photo { position: relative; display: grid; aspect-ratio: 1 / 1.04; place-items: center; overflow: hidden; padding: clamp(18px, 4vw, 54px); border: 1px solid rgba(146,118,88,.24); border-radius: 32px 12px 37px 15px / 16px 35px 13px 30px; background: radial-gradient(ellipse at 50% 40%, #fffdf8 0%, #f3ebdd 76%); box-shadow: 0 24px 58px rgba(79,65,48,.12), inset 0 1px rgba(255,255,255,.9); }
+  .product-detail-photo::after { position: absolute; inset: 12px; border: 1px solid rgba(146,118,88,.13); border-radius: 25px 9px 30px 11px / 11px 28px 9px 24px; content: ''; pointer-events: none; }
+  .product-detail-photo img { display: block; width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 16px 14px rgba(61,53,42,.13)); }
+  .product-detail-copy { padding: clamp(5px, 2vw, 24px) 0; }
+  .product-detail-copy .eyebrow { margin-bottom: 14px; color: #a43c56; }
+  .product-detail-copy h1 { margin: 0 0 14px; font-family: 'Playfair Display', Georgia, serif; font-size: clamp(38px, 5vw, 62px); font-weight: 400; line-height: 1.08; letter-spacing: -.04em; }
+  .product-detail-price { margin: 0 0 19px; color: #805047; font-family: 'Playfair Display', Georgia, serif; font-size: 20px; }
+  .product-detail-description { margin: 0 0 23px; color: #4d5b59; font-size: 14px; line-height: 1.9; }
+  .product-detail-note { margin: 21px 0 0; color: #69716a; font-family: 'Playfair Display', Georgia, serif; font-size: 13px; font-style: italic; }
+  .product-detail-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 16px; }
+  .product-detail-back { color: #425d56 !important; font-size: 12px; text-decoration: underline !important; text-underline-offset: 4px; }
+  .product-detail-back:hover { color: #a43c56 !important; }
+  .product-buy-button { min-height: 52px; padding: 0 23px; border: 1px solid #774939; border-radius: 24px 9px 22px 10px / 10px 23px 8px 22px; background: #a85d45; box-shadow: 0 5px 0 #774939, 0 10px 20px rgba(119,73,57,.14); color: #fff9ee !important; font-size: 12px; letter-spacing: .035em; }
+  .product-buy-button:hover { border-color: #774939; background: #965039; box-shadow: 0 3px 0 #774939, 0 8px 17px rgba(119,73,57,.17); transform: translateY(2px) rotate(-1deg); }
+  .product-buy-button:active { box-shadow: 0 1px 0 #774939; transform: translateY(4px) rotate(1deg) scale(.98); }
+  .product-pairings { padding: 58px 0 82px; border-top: 1px solid rgba(146,118,88,.19); background: rgba(255,253,248,.63); }
+  .product-pairings-heading { display: flex; align-items: end; justify-content: space-between; gap: 20px; margin-bottom: 23px; }
+  .product-pairings-heading .eyebrow { margin-bottom: 9px; }
+  .product-pairings-heading h2 { margin: 0; font-size: clamp(29px, 4vw, 40px); }
+  .product-pairings-heading > p { max-width: 310px; margin: 0 0 4px; color: #68706a; font-size: 12px; line-height: 1.7; }
+  .product-pairing-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+  .product-pairing-card { display: grid; grid-template-columns: minmax(110px, .42fr) 1fr; overflow: hidden; border: 1px solid rgba(146,118,88,.22); border-radius: 23px 8px 21px 10px; background: #fffdf8; color: inherit; box-shadow: 0 10px 25px rgba(79,65,48,.06); transition: transform .3s ease, box-shadow .3s ease; }
+  .product-pairing-card:hover { box-shadow: 0 15px 32px rgba(79,65,48,.12); transform: translateY(-3px) rotate(-.4deg); }
+  .product-pairing-card img { width: 100%; height: 100%; min-height: 142px; padding: 10px; background: #f2ebdf; object-fit: contain; }
+  .product-pairing-copy { align-self: center; padding: 17px 19px; }
+  .product-pairing-copy p { margin: 0 0 6px; color: #a05d4e; font-size: 9px; font-weight: 600; letter-spacing: .15em; text-transform: uppercase; }
+  .product-pairing-copy h3 { margin: 0 0 7px; color: #33484e; font-family: 'Playfair Display', Georgia, serif; font-size: 19px; font-weight: 400; line-height: 1.25; }
+  .product-pairing-copy span { color: #805047; font-size: 11px; font-weight: 600; }
+  .product-detail-enter .product-detail-photo { animation: reveal-ceramic 680ms cubic-bezier(.2,.75,.25,1) both; }
+  .product-detail-enter .product-detail-copy { animation: settle-copy 520ms 100ms ease-out both; }
+  @keyframes reveal-ceramic { from { opacity: 0; transform: translateY(22px) rotate(1.5deg) scale(.975); } to { opacity: 1; transform: translateY(0) rotate(0) scale(1); } }
+  @keyframes settle-copy { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+  .product-detail-missing { max-width: 620px; margin: 12vh auto; padding: 36px; text-align: center; }
+  .studio-updates-section { padding: 82px 0; background: #fffaf1; }
+  .studio-updates-heading { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin-bottom: 28px; }
+  .studio-updates-heading h2 { margin: 0 0 8px; font-size: clamp(34px, 4vw, 46px); letter-spacing: -.035em; }
+  .studio-updates-heading > p { max-width: 350px; margin: 0 0 4px; color: #58645f; font-size: 12px; line-height: 1.75; }
+  .studio-updates-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+  .studio-update-card { overflow: hidden; border: 1px solid rgba(135,95,68,.17); border-radius: 23px 8px 20px 9px; background: #fffdf9; box-shadow: 0 10px 28px rgba(79,65,48,.07); }
+  .studio-update-card img { aspect-ratio: 1 / .88; background: #eee5d9; }
+  .studio-update-copy { padding: 16px 18px 19px; }
+  .studio-update-category { margin: 0 0 7px; color: #a05d4e; font-size: 9px; font-weight: 600; letter-spacing: .15em; text-transform: uppercase; }
+  .studio-update-copy p:last-child { margin: 0; color: #46575a; font-size: 12px; line-height: 1.7; }
+  .studio-updates-empty { padding: 30px; border: 1px dashed #c9ad91; border-radius: 22px 8px 20px 9px; color: #6a675f; text-align: center; font-size: 13px; }
+  .admin-update-composer { display: grid; gap: 11px; margin-bottom: 25px; padding-bottom: 24px; border-bottom: 1px solid rgba(135,95,68,.17); }
+  .admin-update-composer h3 { margin: 0; color: #33484e; font-family: 'Playfair Display', Georgia, serif; font-size: 20px; font-weight: 400; }
+  .admin-update-composer label { color: #344b52; font-size: 12px; font-weight: 600; }
+  .admin-update-composer input, .admin-update-composer textarea, .admin-update-composer select { width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid #d1bba2; border-radius: 14px 5px 15px 5px / 6px 14px 5px 13px; background: #fffdf9; color: #293e48; font: 13px 'DM Sans', sans-serif; }
+  .admin-update-composer textarea { min-height: 80px; resize: vertical; }
+  .admin-update-composer input:focus, .admin-update-composer textarea:focus, .admin-update-composer select:focus { border-color: #bc6655; outline: 3px solid rgba(188,102,85,.2); outline-offset: 2px; }
+  .admin-update-list { display: grid; gap: 9px; }
+  .admin-update-row { display: grid; grid-template-columns: 58px minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 8px; border-radius: 15px 6px 14px 7px; background: #fff8ed; }
+  .admin-update-row img { width: 58px; height: 58px; border-radius: 11px 4px 10px 5px; object-fit: cover; }
+  .admin-update-row p { margin: 0; color: #52666a; font-size: 11px; line-height: 1.5; }
+  .admin-update-notice { margin: 0; color: #765c44; font-size: 10px; line-height: 1.6; }
+  .admin-updates-workspace { margin-top: 24px; }
+  .admin-updates-workspace > .admin-inventory { max-width: 850px; }
+  .quality-section { padding: 28px 0 54px; background: #fffdf9; }
+  .quality-eyebrow { margin-bottom: 17px; color: #8d6b53; text-align: center; }
+  .quality-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+  .quality-card { min-height: 100px; display: grid; grid-template-columns: 38px minmax(0, 1fr); align-items: center; gap: 13px; padding: 17px 19px; border: 1px solid #c6aa8e; border-radius: 20px 7px 19px 8px / 8px 19px 7px 20px; background: rgba(255,252,245,.82); box-shadow: inset 0 1px rgba(255,255,255,.8); }
+  .quality-icon { width: 36px; height: 36px; display: grid; place-items: center; border: 1px solid rgba(138,96,69,.2); border-radius: 50%; background: #f1e5d5; color: #8a6045; }
+  .quality-icon svg { width: 17px; height: 17px; stroke-width: 1.7; }
+  .quality-card h3 { margin: 0 0 4px; color: #34484e; font-family: 'Playfair Display', Georgia, serif; font-size: 16px; font-weight: 400; line-height: 1.25; }
+  .quality-card p { margin: 0; color: #62645c; font-size: 11px; line-height: 1.55; }
+  .kiln-status-section { padding: 42px 0 58px; background: #f7eddc; }
+  .kiln-status-card { display: flex; align-items: center; justify-content: space-between; gap: 36px; padding: clamp(25px, 4vw, 42px); border: 1px solid rgba(135,95,68,.2); border-radius: 34px 12px 30px 14px / 19px 33px 15px 31px; background: radial-gradient(rgba(117,76,53,.09) .65px, transparent .85px) 0 0 / 21px 21px, rgba(255,253,249,.76); box-shadow: 0 15px 40px rgba(94,65,45,.08), inset 0 1px rgba(255,255,255,.8); }
+  .kiln-status-copy { max-width: 520px; }
+  .kiln-status-copy .eyebrow { margin-bottom: 10px; color: #8d4b36; }
+  .kiln-status-copy h2 { margin: 0 0 8px; font-size: clamp(30px, 4vw, 42px); letter-spacing: -.035em; }
+  .kiln-status-description { margin: 0; color: #4d5149; font-size: 13px; line-height: 1.75; }
+  .notify-form { flex: 0 0 min(100%, 390px); display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 10px; }
+  .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; clip-path: inset(50%); }
+  .notify-form input { width: 100%; min-width: 0; min-height: 48px; padding: 11px 14px; border: 1px solid #c6aa8e; border-radius: 16px 5px 17px 6px / 6px 17px 5px 16px; background: rgba(255,252,245,.88); color: #293e48; font: 13px 'DM Sans', sans-serif; transition: border-color .2s, box-shadow .2s, background .2s; }
+  .notify-form input:focus { border-color: #8a6045; outline: 3px solid rgba(138,96,69,.25); outline-offset: 2px; background: #fffdf8; }
+  .notify-button { min-height: 48px; padding: 0 18px; border: 1px solid #704b39; border-radius: 19px 7px 17px 6px / 7px 18px 6px 17px; background: #31594f; color: #fff8ed; cursor: pointer; font: 600 11px 'DM Sans', sans-serif; letter-spacing: .04em; transition: background .25s, transform .25s, box-shadow .25s; }
+  .notify-button:hover { background: #1d514c; box-shadow: 0 6px 15px rgba(79,55,40,.16); transform: translateY(-1px); }
+  .notify-button:focus-visible { outline: 3px solid #8a6045; outline-offset: 3px; }
+  .notify-status { grid-column: 1 / -1; margin: 3px 0 0; color: #795541; font-size: 11px; line-height: 1.6; }
   .artist-section { padding: 86px 0; background: #f7eddc; }
   .artist-grid { display: grid; grid-template-columns: .95fr 1fr; align-items: center; gap: clamp(42px, 8vw, 96px); }
   .artist-photo-wrap { position: relative; width: min(100%, 450px); }
@@ -354,11 +582,11 @@ const styles = `
   .form-field input, .form-field textarea { width: 100%; min-height: 47px; border: 1px solid #c6aa8e; border-radius: 16px 5px 17px 6px / 6px 17px 5px 16px; padding: 12px 14px; background: rgba(255,252,245,.82); color: #293e48; font: 14px 'DM Sans', sans-serif; transition: border-color .2s, box-shadow .2s, background .2s; }
   .form-field input:focus, .form-field textarea:focus { border-color: #8a6045; outline: 3px solid rgba(138,96,69,.28); outline-offset: 2px; background: #fffdf8; }
   .form-field textarea { min-height: 142px; resize: vertical; border-radius: 17px 6px 20px 5px / 7px 18px 6px 17px; }
-  .contact-submit { position: relative; isolation: isolate; justify-self: start; overflow: hidden; min-height: 50px; border: 1px solid #704b39; border-radius: 19px 7px 17px 6px / 7px 18px 6px 17px; background: #31594f; color: #fff8ed !important; cursor: pointer; transition: transform .3s ease, box-shadow .3s ease, background-color .3s ease, border-color .3s ease; }
-  .contact-submit::before { position: absolute; z-index: -1; top: -125%; left: -18%; width: 136%; height: 150%; border-radius: 48%; background: #a6654a; content: ''; opacity: .86; transform: translateY(70%) rotate(-7deg); transition: transform .42s cubic-bezier(.2,.7,.2,1); }
-  .contact-submit:hover { border-color: #704b39; background: #31594f; box-shadow: 0 8px 18px rgba(79,55,40,.2); transform: translateY(-2px); }
-  .contact-submit:hover::before { transform: translateY(20%) rotate(2deg); }
-  .contact-submit:active { transition-duration: .15s; transform: translateY(1px) scale(.98); box-shadow: 0 2px 7px rgba(79,55,40,.18); }
+  .contact-submit { position: relative; justify-self: start; min-height: 50px; padding: 0 21px 0 43px; border: 1px dashed #9c684d; border-radius: 999px; background: #fff5e8; color: #704b39 !important; cursor: pointer; box-shadow: 0 4px 0 rgba(156,104,77,.2); transition: transform .28s cubic-bezier(.2,.8,.25,1), box-shadow .28s, background-color .28s; }
+  .contact-submit::before { position: absolute; left: 16px; color: #b86d50; content: '✿'; font-size: 16px; line-height: 1; transition: transform .35s cubic-bezier(.2,.8,.25,1); }
+  .contact-submit:hover { border-color: #9c684d; background: #ffebd7; box-shadow: 0 6px 0 rgba(156,104,77,.2); transform: translateY(-2px) rotate(-1.5deg); }
+  .contact-submit:hover::before { transform: rotate(28deg) scale(1.18); }
+  .contact-submit:active { transition-duration: .12s; box-shadow: 0 1px 0 rgba(156,104,77,.24); transform: translateY(3px) rotate(1deg) scale(.98); }
   .contact-submit:focus-visible { outline: 3px solid #8a6045; outline-offset: 3px; }
   .form-status { grid-column: 1 / -1; margin: 0; color: #754238; font-size: 13px; line-height: 1.6; }
   .site-footer { padding: 27px 0; background: #fffdf9; }
@@ -403,6 +631,8 @@ const styles = `
   }
   @media (prefers-reduced-motion: reduce) {
     .glaze-wave { animation: none; }
+    .product-detail-enter .product-detail-photo,
+    .product-detail-enter .product-detail-copy { animation: none; }
   }
   @media (max-width: 820px) {
     .shell { width: min(100% - 40px, 620px); }
@@ -417,10 +647,19 @@ const styles = `
     .hero h1 { font-size: clamp(39px, 6vw, 54px); }
     .section { padding: 76px 0; }
     .product-grid { gap: 32px 18px; }
+    .quality-grid { gap: 10px; }
+    .quality-card { grid-template-columns: 32px minmax(0, 1fr); gap: 9px; padding: 15px 12px; }
+    .quality-icon { width: 32px; height: 32px; }
+    .quality-card h3 { font-size: 14px; }
+    .kiln-status-card { align-items: flex-start; flex-direction: column; gap: 22px; }
+    .notify-form { flex-basis: auto; width: 100%; }
     .artist-grid { gap: 46px; }
     .contact-grid { gap: 32px; }
     .contact-form { padding: 23px; gap: 14px; }
     .glaze-stage { min-height: 280px; }
+    .product-detail-grid { gap: 34px; }
+    .studio-updates-grid { gap: 13px; }
+    .studio-update-copy { padding: 13px 14px 15px; }
   }
   @media (max-width: 600px) {
     .shell { width: calc(100% - 36px); }
@@ -452,6 +691,32 @@ const styles = `
     .product-details { flex-direction: column; gap: 6px; padding-top: 11px; }
     .product-details h3 { font-size: 16px; }
     .product-details p, .price { font-size: 11px; }
+    .product-detail-main { padding: 38px 0 58px; }
+    .product-detail-grid { grid-template-columns: 1fr; gap: 28px; }
+    .product-detail-photo { width: min(100%, 430px); margin: 0 auto; }
+    .product-detail-copy h1 { font-size: clamp(38px, 11vw, 52px); }
+    .product-pairings { padding: 46px 0 58px; }
+    .product-pairings-heading { align-items: flex-start; flex-direction: column; gap: 9px; }
+    .product-pairing-grid { grid-template-columns: 1fr; gap: 12px; }
+    .product-pairing-card { grid-template-columns: minmax(95px, .38fr) 1fr; }
+    .product-pairing-card img { min-height: 118px; }
+    .product-pairing-copy { padding: 13px; }
+    .product-pairing-copy h3 { font-size: 17px; }
+    .studio-updates-section { padding: 58px 0; }
+    .studio-updates-heading { align-items: flex-start; flex-direction: column; gap: 10px; margin-bottom: 22px; }
+    .studio-updates-grid { grid-template-columns: 1fr; gap: 15px; }
+    .studio-update-card { display: grid; grid-template-columns: minmax(110px, .8fr) 1fr; }
+    .studio-update-card img { height: 100%; aspect-ratio: auto; }
+    .studio-update-copy { align-self: center; }
+    .quality-section { padding: 28px 0 42px; }
+    .quality-grid { grid-template-columns: 1fr; gap: 10px; }
+    .quality-card { grid-template-columns: 38px minmax(0, 1fr); gap: 12px; padding: 14px 16px; }
+    .quality-icon { width: 36px; height: 36px; }
+    .quality-card h3 { font-size: 16px; }
+    .kiln-status-section { padding: 34px 0 44px; }
+    .kiln-status-card { gap: 19px; padding: 24px 19px; }
+    .notify-form { grid-template-columns: minmax(0, 1fr); gap: 9px; }
+    .notify-button { justify-self: start; }
     .artist-section { padding: 62px 0; }
     .artist-grid { grid-template-columns: 1fr; gap: 31px; }
     .artist-photo-wrap { max-width: 410px; width: calc(100% - 14px); margin: 0 auto; }
@@ -471,6 +736,7 @@ const styles = `
     .admin-topbar { margin-bottom: 36px; }
     .admin-heading { align-items: flex-start; flex-direction: column; }
     .admin-workspace { grid-template-columns: 1fr; }
+    .admin-updates-workspace > .admin-inventory { padding: 18px; }
     .admin-product-row { grid-template-columns: 55px minmax(0, 1fr) auto; gap: 10px; }
     .admin-product-row img { width: 55px; height: 55px; }
     .admin-inventory, .admin-editor { padding: 18px; }
@@ -487,6 +753,52 @@ const styles = `
     .footer-inner { align-items: flex-start; flex-direction: column; gap: 14px; }
     .footer-links { gap: 16px; }
   }
+  .storefront { color: #263a3e; font-size: 16px; }
+  .storefront h1, .storefront h2, .storefront h3 { color: #20343a; font-weight: 500; }
+  .storefront p:not(.eyebrow) { color: #3f4d4c; }
+  .storefront .eyebrow { color: #873247; font-size: 11px; letter-spacing: .16em; }
+  .header-social { color: #4f4b43; font-size: 11px; }
+  .nav-links { color: #31474d; }
+  .header-social-separator { color: #8e8171; }
+  .hero-copy, .section-heading p, .glaze-heading > p:last-child,
+  .glaze-caption p, .product-details p, .artist-copy p,
+  .contact-copy .contact-description, .kiln-status-description,
+  .studio-updates-heading > p, .product-detail-description {
+    color: #3d4b4a;
+  }
+  .hero-note, .product-detail-note, .contact-photo-caption,
+  .story-gallery figcaption { color: #51483f; }
+  .glaze-fun-fact, .quality-card p, .product-pairings-heading > p,
+  .studio-update-copy p:last-child {
+    color: #494d47;
+  }
+  .product-details h3, .glaze-caption h3, .quality-card h3,
+  .product-pairing-copy h3 { color: #263b40; font-weight: 500; }
+  .price, .product-detail-price, .product-pairing-copy span { color: #643a2e; }
+  .buy-link, .glaze-shop-link, .product-detail-back,
+  .footer-shop { color: #20554d !important; font-weight: 600; }
+  .footer-inner { color: #3c4e52; font-size: 12px; }
+  .glaze-fun-fact { color: #494239 !important; font-size: 12px !important; }
+  .studio-update-category, .product-pairing-copy > p { color: #873f32; }
+  .notify-status, .form-status { color: #673d30; }
+  .form-field input::placeholder, .form-field textarea::placeholder,
+  .notify-form input::placeholder { color: #5b5a52; opacity: 1; }
+  .admin-login-card > p:not(.admin-kicker), .admin-heading p:not(.admin-kicker),
+  .admin-product-info span, .admin-empty, .admin-panel-title span,
+  .admin-update-notice, .admin-product-row p {
+    color: #465655;
+  }
+  .admin-kicker, .admin-metric span { color: #843b35; }
+  .admin-metric strong, .admin-product-info strong { color: #703d33; }
+  .product-detail { color: #263a3e; font-size: 16px; }
+  .product-detail h1, .product-detail h2, .product-detail h3 { color: #20343a; font-weight: 500; }
+  .product-detail p:not(.eyebrow) { color: #3f4d4c; }
+  .product-detail .eyebrow { color: #873247; font-size: 11px; letter-spacing: .16em; }
+  .product-detail p.product-detail-price { color: #643a2e; font-size: 21px; font-weight: 500; }
+  .product-detail p.product-detail-note { color: #51483f; }
+  .product-detail .product-detail-back { color: #20554d !important; font-weight: 600; }
+  .product-detail .product-pairing-copy > p { color: #873f32; }
+  .product-detail .product-pairing-copy span { color: #643a2e; font-weight: 600; }
   @media (prefers-reduced-motion: reduce) {
     html { scroll-behavior: auto; }
     *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
@@ -495,6 +807,7 @@ const styles = `
 
 function GlazeStudio() {
   const [selectedGlaze, setSelectedGlaze] = useState(glazes[0])
+  const [hoveredGlaze, setHoveredGlaze] = useState<Glaze | null>(null)
 
   return (
     <section className="glaze-studio" aria-labelledby="glaze-studio-title">
@@ -613,6 +926,10 @@ function GlazeStudio() {
                 aria-pressed={selectedGlaze.id === glaze.id}
                 title={glaze.name}
                 onClick={() => setSelectedGlaze(glaze)}
+                onMouseEnter={() => setHoveredGlaze(glaze)}
+                onMouseLeave={() => setHoveredGlaze(null)}
+                onFocus={() => setHoveredGlaze(glaze)}
+                onBlur={() => setHoveredGlaze(null)}
               />
             ))}
           </div>
@@ -620,12 +937,176 @@ function GlazeStudio() {
           <div className="glaze-caption" aria-live="polite" aria-atomic="true">
             <h3>{selectedGlaze.name}</h3>
             <p>{selectedGlaze.finish}</p>
+            {hoveredGlaze && (
+              <p className="glaze-fun-fact">{hoveredGlaze.funFact}</p>
+            )}
             <a className="glaze-shop-link" href={shopUrl} target="_blank" rel="noopener noreferrer">
               Shop pieces in this glaze
               <ArrowUpRight aria-hidden="true" />
             </a>
           </div>
         </div>
+      </div>
+    </section>
+  )
+}
+
+function ClayDivider() {
+  return (
+    <div className="clay-divider" aria-hidden="true">
+      <svg viewBox="0 0 1200 32" preserveAspectRatio="none">
+        <path d="M0 17 C72 13 126 20 198 16 S322 12 402 17 529 20 603 15 727 11 801 16 929 21 1002 16 1128 12 1200 17" />
+        <path d="M183 21 C218 19 248 22 279 20 M746 11 C777 9 809 11 838 10 M1030 21 C1060 19 1091 21 1120 19" />
+      </svg>
+    </div>
+  )
+}
+
+function productSlug(product: Product) {
+  return product.name
+    .toLowerCase()
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')
+}
+
+function getPairedProducts(product: Product, allProducts: Product[]) {
+  const pairedSlugs = productPairings[productSlug(product)] ?? []
+  const pairings = pairedSlugs
+    .map((slug) => allProducts.find((item) => productSlug(item) === slug))
+    .filter((item): item is Product => Boolean(item))
+
+  return [
+    ...pairings,
+    ...allProducts.filter((item) =>
+      productSlug(item) !== productSlug(product) &&
+      !pairings.some((pairing) => productSlug(pairing) === productSlug(item)),
+    ),
+  ].slice(0, 2)
+}
+
+function ProductDetail({
+  product,
+  allProducts,
+}: {
+  product: Product | undefined
+  allProducts: Product[]
+}) {
+  const pairedProducts = product ? getPairedProducts(product, allProducts) : []
+
+  return (
+    <div className="product-detail product-detail-enter">
+      <style>{styles}</style>
+      <header className="product-detail-header">
+        <div className="shell">
+          <a className="wordmark" href="/#home" aria-label="SlippedCeramics home">
+            <Palette className="wordmark-icon" size={22} strokeWidth={1.5} />
+            <span>SlippedCeramics</span>
+          </a>
+          <a className="product-detail-back" href="/#collection">Back to the collection</a>
+        </div>
+      </header>
+      {product ? (
+        <>
+        <main className="product-detail-main">
+          <div className="shell product-detail-grid">
+            <div className="product-detail-photo">
+              <img src={product.image} alt={product.alt} />
+            </div>
+            <div className="product-detail-copy">
+              <p className="eyebrow">MADE BY HAND IN NEWTOWN, CT</p>
+              <h1>{product.name}</h1>
+              <p className="product-detail-price">{product.price}</p>
+              <p className="product-detail-description">{product.description}</p>
+              <div className="product-detail-actions">
+                <a className="button product-buy-button" href={shopUrl} target="_blank" rel="noopener noreferrer">
+                  Bring this piece home <ArrowUpRight aria-hidden="true" />
+                </a>
+                <a className="product-detail-back" href="/#collection">Explore more pieces</a>
+              </div>
+              <p className="product-detail-note">Small-batch stoneware, shaped slowly and meant to be lived with.</p>
+            </div>
+          </div>
+        </main>
+        {pairedProducts.length > 0 && (
+          <section className="product-pairings" aria-labelledby="product-pairings-title">
+            <div className="shell">
+              <div className="product-pairings-heading">
+                <div>
+                  <p className="eyebrow">A lovely little pairing</p>
+                  <h2 id="product-pairings-title">Goes beautifully with…</h2>
+                </div>
+                <p>Handmade pieces that feel right at home alongside this one.</p>
+              </div>
+              <div className="product-pairing-grid">
+                {pairedProducts.map((pairedProduct) => (
+                  <a
+                    className="product-pairing-card"
+                    href={`/piece/${productSlug(pairedProduct)}`}
+                    key={productSlug(pairedProduct)}
+                  >
+                    <img src={pairedProduct.image} alt={pairedProduct.alt} loading="lazy" />
+                    <div className="product-pairing-copy">
+                      <p>Pair it with</p>
+                      <h3>{pairedProduct.name}</h3>
+                      <span>{pairedProduct.price}</span>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+        </>
+      ) : (
+        <main className="product-detail-missing">
+          <p className="eyebrow">A piece from another shelf?</p>
+          <h1>This piece isn't in the current collection.</h1>
+          <p>It may have found a home already. Browse the pieces Kelly has available now.</p>
+          <a className="button" href="/#collection">Back to the collection</a>
+        </main>
+      )}
+    </div>
+  )
+}
+
+function StudioUpdatesGallery({
+  updates,
+  status,
+}: {
+  updates: StudioUpdate[]
+  status: string
+}) {
+  return (
+    <section className="studio-updates-section" aria-labelledby="studio-updates-title">
+      <div className="shell">
+        <div className="studio-updates-heading">
+          <div>
+            <p className="eyebrow">A peek at the workbench</p>
+            <h2 id="studio-updates-title">Notes from the studio.</h2>
+          </div>
+          <p>Little in-between moments from Kelly’s studio, shared as they happen.</p>
+        </div>
+        {status ? (
+          <p className="studio-updates-empty" role="alert">{status}</p>
+        ) : updates.length ? (
+          <div className="studio-updates-grid">
+            {updates.map((update) => (
+              <article className="studio-update-card" key={update.id}>
+                <img src={update.image} alt={update.caption} loading="lazy" />
+                <div className="studio-update-copy">
+                  <p className="studio-update-category">{update.category}</p>
+                  <p>{update.caption}</p>
+                </div>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <p className="studio-updates-empty">
+            The studio is quiet for a moment. Kelly’s next little update will find its way here.
+          </p>
+        )}
       </div>
     </section>
   )
@@ -646,7 +1127,25 @@ function StudioAdmin({
     price: '',
     image: '',
     alt: '',
+    description: '',
   })
+  const [studioUpdatesState, setStudioUpdatesState] = useState(getStudioUpdatesState)
+  const { updates, status: updateStatus } = studioUpdatesState
+  const [postingUpdate, setPostingUpdate] = useState(false)
+
+  function setUpdateStatus(status: string) {
+    setStudioUpdatesState((current) => ({ ...current, status }))
+  }
+
+  useEffect(() => {
+    function syncUpdates(event: StorageEvent) {
+      if (event.key !== studioUpdatesStorageKey) return
+      setStudioUpdatesState(getStudioUpdatesState())
+    }
+
+    window.addEventListener('storage', syncUpdates)
+    return () => window.removeEventListener('storage', syncUpdates)
+  }, [])
 
   function handleLogin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -654,7 +1153,7 @@ function StudioAdmin({
   }
 
   function resetDraft() {
-    setDraft({ name: '', price: '', image: '', alt: '' })
+    setDraft({ name: '', price: '', image: '', alt: '', description: '' })
     setEditingIndex(null)
   }
 
@@ -679,6 +1178,54 @@ function StudioAdmin({
   function deleteProduct(index: number) {
     onInventoryChange(inventory.filter((_, productIndex) => productIndex !== index))
     if (editingIndex === index) resetDraft()
+  }
+
+  async function handleStudioUpdateSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    const form = event.currentTarget
+    const formData = new FormData(form)
+    const photo = formData.get('photo')
+    if (!(photo instanceof File) || photo.size === 0) {
+      setUpdateStatus('Choose a photo from your device before posting.')
+      return
+    }
+
+    setPostingUpdate(true)
+    setUpdateStatus('')
+    try {
+      const image = await prepareStudioPhoto(photo)
+      const nextUpdates = [{
+        id: crypto.randomUUID(),
+        caption: String(formData.get('caption')).trim(),
+        category: String(formData.get('category')),
+        image,
+        postedAt: new Date().toISOString(),
+      }, ...updates].slice(0, maxStudioUpdates)
+      window.localStorage.setItem(studioUpdatesStorageKey, JSON.stringify(nextUpdates))
+      setStudioUpdatesState({ updates: nextUpdates, status: 'Your studio note is posted on this browser.' })
+      form.reset()
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Could not save the studio note.'
+      setStudioUpdatesState((current) => ({
+        ...current,
+        status: `${message} Check this browser’s available storage and try again.`,
+      }))
+    } finally {
+      setPostingUpdate(false)
+    }
+  }
+
+  function deleteStudioUpdate(updateId: string) {
+    const nextUpdates = updates.filter((update) => update.id !== updateId)
+    try {
+      window.localStorage.setItem(studioUpdatesStorageKey, JSON.stringify(nextUpdates))
+      setStudioUpdatesState({ updates: nextUpdates, status: 'Studio note removed.' })
+    } catch (error) {
+      setStudioUpdatesState((current) => ({
+        ...current,
+        status: error instanceof Error ? error.message : 'Could not remove the studio note.',
+      }))
+    }
   }
 
   return (
@@ -832,6 +1379,13 @@ function StudioAdmin({
                     onChange={(event) => setDraft({ ...draft, alt: event.target.value })}
                     required
                   />
+                  <label htmlFor="product-description">Product description</label>
+                  <textarea
+                    id="product-description"
+                    value={draft.description}
+                    onChange={(event) => setDraft({ ...draft, description: event.target.value })}
+                    required
+                  />
                   <div className="admin-form-actions">
                     <button className="admin-primary" type="submit">
                       {editingIndex === null ? <Plus aria-hidden="true" /> : <Pencil aria-hidden="true" />}
@@ -846,10 +1400,73 @@ function StudioAdmin({
                 </form>
               </section>
             </div>
+            <section className="admin-updates-workspace" aria-labelledby="studio-updates-admin-title">
+              <div className="admin-inventory">
+                <div className="admin-panel-title">
+                  <h2 id="studio-updates-admin-title">Notes from the workbench</h2>
+                  <span>{updates.length} / {maxStudioUpdates} posts</span>
+                </div>
+                <form className="admin-update-composer" onSubmit={handleStudioUpdateSubmit}>
+                  <h3>Share a fresh little moment</h3>
+                  <label htmlFor="studio-update-photo">Phone snap</label>
+                  <input
+                    id="studio-update-photo"
+                    name="photo"
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    required
+                  />
+                  <label htmlFor="studio-update-category">What’s on the bench?</label>
+                  <select id="studio-update-category" name="category" defaultValue="Fresh greenware">
+                    <option>Fresh greenware</option>
+                    <option>Clay delivery</option>
+                    <option>Glaze testing</option>
+                    <option>From the workbench</option>
+                  </select>
+                  <label htmlFor="studio-update-caption">A quick note</label>
+                  <textarea
+                    id="studio-update-caption"
+                    name="caption"
+                    placeholder="A few words about this little studio moment..."
+                    maxLength={180}
+                    required
+                  />
+                  <button className="admin-primary" type="submit" disabled={postingUpdate}>
+                    <Plus aria-hidden="true" />
+                    {postingUpdate ? 'Preparing photo...' : 'Post studio note'}
+                  </button>
+                  <p className="admin-update-notice">
+                    Photos are resized and saved in this browser only. Up to {maxStudioUpdates} notes appear on the shop when opened in this same browser.
+                  </p>
+                  {updateStatus && <p className="admin-update-notice" role="status">{updateStatus}</p>}
+                </form>
+                {updates.length ? (
+                  <div className="admin-update-list">
+                    {updates.map((update) => (
+                      <article className="admin-update-row" key={update.id}>
+                        <img src={update.image} alt="" />
+                        <p><strong>{update.category}</strong><br />{update.caption}</p>
+                        <button
+                          className="admin-icon-button delete"
+                          type="button"
+                          onClick={() => deleteStudioUpdate(update.id)}
+                          aria-label={`Remove studio note: ${update.caption}`}
+                        >
+                          <Trash2 aria-hidden="true" />
+                        </button>
+                      </article>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="admin-empty">The workbench board is ready for its first snap.</p>
+                )}
+              </div>
+            </section>
             <p className="admin-notice">
               Preview mode: the page is not protected by real authentication, and
-              changes only affect this open session. Stripe and product storage
-              are not connected.
+              product changes only affect this open session. Studio notes are
+              saved in this browser and are not shared with other visitors.
             </p>
           </main>
         )}
@@ -860,13 +1477,24 @@ function StudioAdmin({
 
 function App() {
   const [formStatus, setFormStatus] = useState('')
+  const [notifyStatus, setNotifyStatus] = useState('')
   const [storyOpen, setStoryOpen] = useState(false)
   const [logoTwirling, setLogoTwirling] = useState(false)
   const [catalog, setCatalog] = useState(products)
+  const [studioUpdatesState, setStudioUpdatesState] = useState(getStudioUpdatesState)
   const productGridRef = useRef<HTMLDivElement>(null)
   const storyTriggerRef = useRef<HTMLButtonElement>(null)
   const storyCloseRef = useRef<HTMLButtonElement>(null)
   const logoTwirlTimeoutRef = useRef<number | undefined>(undefined)
+
+  useEffect(() => {
+    function syncStudioUpdates() {
+      setStudioUpdatesState(getStudioUpdatesState())
+    }
+
+    window.addEventListener('storage', syncStudioUpdates)
+    return () => window.removeEventListener('storage', syncStudioUpdates)
+  }, [])
 
   useEffect(() => () => {
     if (logoTwirlTimeoutRef.current !== undefined) {
@@ -1000,8 +1628,26 @@ function App() {
     )
   }
 
+  function handleNotifySubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setNotifyStatus(
+      'Email notifications are not connected yet. Please check back for the next kiln drop.',
+    )
+  }
+
   if (window.location.pathname === '/studio') {
     return <StudioAdmin inventory={catalog} onInventoryChange={setCatalog} />
+  }
+
+  const productPath = window.location.pathname.match(/^\/piece\/([^/]+)\/?$/)
+  if (productPath) {
+    const slug = decodeURIComponent(productPath[1])
+    return (
+      <ProductDetail
+        product={catalog.find((product) => productSlug(product) === slug)}
+        allProducts={catalog}
+      />
+    )
   }
 
   return (
@@ -1027,6 +1673,10 @@ function App() {
           <div className="header-social" aria-label="Social and shop links">
             <a href="https://www.instagram.com/slippedceramics/" target="_blank" rel="noopener noreferrer">
               Instagram <span className="header-social-arrow" aria-hidden="true">↗</span>
+            </a>
+            <span className="header-social-separator" aria-hidden="true">/</span>
+            <a href="https://www.tiktok.com/@slippedceramics" target="_blank" rel="noopener noreferrer">
+              TikTok <span className="header-social-arrow" aria-hidden="true">↗</span>
             </a>
             <span className="header-social-separator" aria-hidden="true">/</span>
             <a href={shopUrl} target="_blank" rel="noopener noreferrer">
@@ -1068,7 +1718,9 @@ function App() {
           </div>
         </section>
 
+        <ClayDivider />
         <GlazeStudio />
+        <ClayDivider />
 
         <section className="section" id="collection">
           <div className="shell">
@@ -1084,9 +1736,7 @@ function App() {
                 <article className="product-card" key={product.name}>
                   <a
                     className="product-image"
-                    href={shopUrl}
-                    target="_blank"
-                    rel="noreferrer"
+                    href={`/piece/${productSlug(product)}`}
                     aria-label={`View ${product.name} in Kelly's shop`}
                   >
                     <img src={product.image} alt={product.alt} loading="lazy" />
@@ -1098,12 +1748,72 @@ function App() {
                     </div>
                     <span className="price">{product.price}</span>
                   </div>
-                  <a className="buy-link" href={shopUrl} target="_blank" rel="noreferrer">
-                    View piece
+                  <a className="buy-link" href={`/piece/${productSlug(product)}`}>
+                    Read about this piece
                     <ArrowUpRight aria-hidden="true" />
                   </a>
                 </article>
               ))}
+            </div>
+          </div>
+        </section>
+
+        <StudioUpdatesGallery updates={studioUpdatesState.updates} status={studioUpdatesState.status} />
+
+        <section className="kiln-status-section" aria-labelledby="kiln-status-title">
+          <div className="shell">
+            <div className="kiln-status-card">
+              <div className="kiln-status-copy">
+                <p className="eyebrow">STUDIO STATUS</p>
+                <h2 id="kiln-status-title">Firing Batch 05</h2>
+                <p className="kiln-status-description">
+                  The kiln is cooling. New one-of-a-kind pieces dropping soon.
+                </p>
+              </div>
+              <form className="notify-form" onSubmit={handleNotifySubmit}>
+                <label className="visually-hidden" htmlFor="notify-email">Email address</label>
+                <input
+                  id="notify-email"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  placeholder="Your email address"
+                  required
+                />
+                <button className="notify-button" type="submit">Notify Me</button>
+                {notifyStatus && (
+                  <p className="notify-status" role="status">{notifyStatus}</p>
+                )}
+              </form>
+            </div>
+          </div>
+        </section>
+
+        <section className="quality-section" aria-label="Everyday quality">
+          <div className="shell">
+            <p className="eyebrow quality-eyebrow">Everyday Quality</p>
+            <div className="quality-grid">
+              <article className="quality-card">
+                <span className="quality-icon"><ShieldCheck aria-hidden="true" /></span>
+                <div>
+                  <h3>Food &amp; Dishwasher Safe</h3>
+                  <p>Cone 6 vitrified stoneware</p>
+                </div>
+              </article>
+              <article className="quality-card">
+                <span className="quality-icon"><Hand aria-hidden="true" /></span>
+                <div>
+                  <h3>Hand-Thrown in CT</h3>
+                  <p>Small-batch, one-of-a-kind</p>
+                </div>
+              </article>
+              <article className="quality-card">
+                <span className="quality-icon"><Heart aria-hidden="true" /></span>
+                <div>
+                  <h3>Slow Living Daily Ware</h3>
+                  <p>Ergonomic handles &amp; heat retention</p>
+                </div>
+              </article>
             </div>
           </div>
         </section>
@@ -1255,13 +1965,13 @@ function App() {
               <figure className="contact-photo-wrap">
                 <div className="contact-photo">
                   <img
-                    src={products[5].image}
-                    alt="Three handmade blue-glazed cups on a worktable with studio shelves in the background"
+                    src={products[3].image}
+                    alt="Hand holding Kelly's cream stoneware tumbler with carved lines and blueberry details"
                     loading="lazy"
                   />
                 </div>
                 <figcaption className="contact-photo-caption">
-                  <span>Little works in progress</span>
+                  <span>One of a kind, made slowly</span>
                   <span>Newtown, Connecticut</span>
                 </figcaption>
               </figure>
